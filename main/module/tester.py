@@ -441,7 +441,7 @@ class FastPortManager:
 class FastNetworkTester:
     """Optimized network tester with connection pooling"""
 
-    def __init__(self, timeout: int = 15):
+    def __init__(self, timeout: int = 20):
         self.timeout = timeout
         self.session = None
         if HAS_REQUESTS:
@@ -617,10 +617,10 @@ class EnhancedProxyTester:
 
     def __init__(self,
                  xray_path: Optional[str] = None,
-                 max_workers: int = 400,  # Reduced from 500 to prevent system overload
+                 max_workers: int = 1000,  # Reduced from 500 to prevent system overload
                  timeout: int = 15,  # Increased timeout for better success rate
                  port_range: Tuple[int, int] = (10000, 20000),
-                 batch_size: int = 400,  # Reduced from 500
+                 batch_size: int = 1000,  # Reduced from 500
                  incremental_save: bool = True,
                  incremental_files: Dict[str, str] = None):
 
@@ -1654,9 +1654,9 @@ def main():
     parser.add_argument('--shadowsocks', '-ss', help='Shadowsocks JSON config file')
     parser.add_argument('--vmess', '-vm', help='VMess JSON config file')
     parser.add_argument('--vless', '-vl', help='VLESS JSON config file')
-    parser.add_argument('--workers', '-w', type=int, default=400, help='Number of concurrent workers')
-    parser.add_argument('--timeout', '-t', type=int, default=15, help='Connection timeout in seconds')
-    parser.add_argument('--batch-size', '-b', type=int, default=400, help='Batch size for processing')
+    parser.add_argument('--workers', '-w', type=int, default=1000, help='Number of concurrent workers')
+    parser.add_argument('--timeout', '-t', type=int, default=20, help='Connection timeout in seconds')
+    parser.add_argument('--batch-size', '-b', type=int, default=1000, help='Batch size for processing')
     parser.add_argument('--xray-path', '-x', help='Path to Xray executable')
     parser.add_argument('--no-incremental', action='store_true', help='Disable incremental saving')
 
