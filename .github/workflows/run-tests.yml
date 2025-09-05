@@ -25,26 +25,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests pysocks tqdm psutil
 
-    - name: Download Xray-core
+    - name: Download Xray-core for Linux
       run: |
         # دانلود آخرین نسخه Xray-core برای لینوکس
-        wget -O xray.zip https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
+        wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
         unzip xray.zip
         chmod +x xray
         sudo mv xray /usr/local/bin/
 
     - name: Create necessary directories
       run: |
-        mkdir -p data/raw data/working_json data/working_url log
+        mkdir -p main/data/working_json main/data/working_url main/log
 
     - name: Run the tests
       run: |
-        python tester.py --shadowsocks data/raw/shadowsocks_configs.json --vmess data/raw/vmess_configs.json --vless data/raw/vless_configs.json
+        cd main/module
+        python tester.py --shadowsocks ../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
 
     - name: Commit and push results
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/working_json/* data/working_url/* log/*
+        git add main/data/working_json/* main/data/working_url/* main/log/*
         git commit -m "Auto-update test results - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         git push origin main
