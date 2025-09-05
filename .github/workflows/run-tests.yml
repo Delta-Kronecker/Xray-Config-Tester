@@ -2,8 +2,8 @@ name: Run Proxy Tests and Upload Results
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # هر 6 ساعت یکبار
-  workflow_dispatch:  # امکان اجرای دستی
+    - cron: '0 */6 * * *'  
+  workflow_dispatch:  
 
 jobs:
   test-proxies:
@@ -27,7 +27,6 @@ jobs:
 
     - name: Download Xray-core for Linux
       run: |
-        # دانلود آخرین نسخه Xray-core برای لینوکس
         wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
         unzip xray.zip
         chmod +x xray
@@ -46,6 +45,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add main/data/working_json/* main/data/working_url/* main/log/*
+        git add main/data/working_url/*
         git commit -m "Auto-update test results - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         git push origin main
