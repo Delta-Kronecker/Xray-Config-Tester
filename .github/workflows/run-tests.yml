@@ -52,24 +52,44 @@ jobs:
 
     - name: Check generated config files
       run: |
-        cd main
-        echo "Generated config files:"
-        ls -la v2ray_config_collector/data/unique/protocols/
-        echo "Content of data/raw directory:"
-        find data/raw/ -name "*.json" -exec echo "{}: " \; -exec head -2 {} \;
+        echo "Generated config files in v2ray_config_collector:"
+        ls -la main/v2ray_config_collector/data/unique/protocols/
+        echo "Content of config files:"
+        find main/v2ray_config_collector/data/unique/protocols/ -name "*.json" -exec echo "{}: " \; -exec head -2 {} \;
+
+    - name: Copy config files to tester directory
+      run: |
+        # کپی فایل‌های پیکربندی به مسیر مورد نیاز tester
+        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json main/data/raw/ || echo "shadowsocks config not found"
+        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json main/data/raw/ || echo "vmess config not found"
+        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json main/data/raw/ || echo "vless config not found"
+        
+        echo "Copied config files to main/data/raw/:"
+        ls -la main/data/raw/
 
     - name: Run the tests
       run: |
         cd main/module
         # تست تمام فایل‌های پیکربندی موجود
-        if [ -f "../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
-          python tester.py --shadowsocks ../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        if [ -f "../../data/raw/shadowsocks_configs.json" ]; then
+          echo "Testing Shadowsocks configurations..."
+          python tester.py --shadowsocks ../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        else
+          echo "❌ Shadowsocks config file not found"
         fi
-        if [ -f "../v2ray_config_collector/data/unique/protocols/vmess_configs.json" ]; then
-          python tester.py --vmess ../v2ray_config_collector/data/unique/protocols/vmess_configs.json --xray-path /usr/local/bin/xray
+        
+        if [ -f "../../data/raw/vmess_configs.json" ]; then
+          echo "Testing VMess configurations..."
+          python tester.py --vmess ../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray
+        else
+          echo "❌ VMess config file not found"
         fi
-        if [ -f "../v2ray_config_collector/data/unique/protocols/vless_configs.json'" ]; then
-          python tester.py --vless ../v2ray_config_collector/data/unique/protocols/vless_configs.json --xray-path /usr/local/bin/xray
+        
+        if [ -f "../../data/raw/vless_configs.json" ]; then
+          echo "Testing VLESS configurations..."
+          python tester.py --vless ../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
+        else
+          echo "❌ VLESS config file not found"
         fi
 
     - name: Configure git for push
@@ -79,17 +99,17 @@ jobs:
 
     - name: Commit and push results
       run: |
-        cd main
-        git add data/raw/* data/working_json/* data/working_url/* log/*
-        git commit -m "Auto-update test results - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
+        # اضافه کردن تمام فایل‌های تولید شده و نتایج
+        git add main/v2ray_config_collector/data/unique/protocols/*
+        git add main/data/raw/*
+        git add main/data/working_json/*
+        git add main/data/working_url/*
+        git add main/log/*
+        
+        git commit -m "Auto-update: Collected and tested configs - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         
         # ابتدا تغییرات را از remote دریافت کنید
         git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash
         
         # سپس تغییرات را push کنید
         git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main
-
-
-
-
-
