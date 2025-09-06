@@ -2,8 +2,8 @@ name: Run Proxy Tests and Upload Results
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # هر ۶ ساعت یکبار
-  workflow_dispatch:  # امکان اجرای دستی
+    - cron: '0 */3 * * *' 
+  workflow_dispatch:  
 
 jobs:
   test-proxies:
