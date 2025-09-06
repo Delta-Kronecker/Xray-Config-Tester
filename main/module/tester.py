@@ -1353,21 +1353,26 @@ class EnhancedProxyTester:
         batch_start = time.time()
         tested_count = 0
         successful_count = 0
-        completed_futures = set()  # ✅ برای ردیابی futureهای تکمیل شده
+        completed_futures = set()
 
         logger.info(f"\n🧪 Testing batch {batch_id} with {len(configs)} configurations...")
 
         # استفاده از ThreadPoolExecutor با timeout بهینه
         with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as executor:
             future_to_config = {}
-            config_to_future = {}  # ✅ نگاشت معکوس برای جلوگیری از دوباره کاری
+            config_to_future = {}
 
             # ارسال تمام تسک‌ها
             for config in configs:
                 try:
+                    # بررسی تکراری نبودن کانفیگ
+                    config_hash = config.get_hash()
+                    if config_hash in config_to_future:
+                        continue  # از ارسال کانفیگ تکراری جلوگیری می‌کند
+
                     future = executor.submit(self._test_single_config, config, batch_id)
                     future_to_config[future] = config
-                    config_to_future[config.get_hash()] = future  # ✅ استفاده از hash برای ردیابی
+                    config_to_future[config_hash] = future
                 except Exception as e:
                     logger.debug(f"Failed to submit task for {config.server}:{config.port}: {e}")
                     error_result = TestResultData(
@@ -1381,20 +1386,19 @@ class EnhancedProxyTester:
                     self._update_stats(error_result)
 
             if HAS_TQDM:
-                progress_bar = tqdm(total=len(configs), desc=f"Batch {batch_id}", unit="config", ncols=80)
+                progress_bar = tqdm(total=len(future_to_config), desc=f"Batch {batch_id}", unit="config", ncols=80)
             else:
-                logger.info(f"Progress: 0/{len(configs)}")
+                logger.info(f"Progress: 0/{len(future_to_config)}")
 
             try:
                 # استفاده از timeout پویا
                 dynamic_timeout = min(self.timeout + 5, self.timeout * 1.5)
 
                 for future in as_completed(future_to_config, timeout=dynamic_timeout):
-                    if future in completed_futures:  # ✅ جلوگیری از پردازش تکراری
+                    if future in completed_futures:
                         continue
 
-                    completed_futures.add(future)  # ✅ علامتگذاری به عنوان تکمیل شده
-
+                    completed_futures.add(future)
                     config = future_to_config[future]
                     tested_count += 1
 
@@ -1472,9 +1476,6 @@ class EnhancedProxyTester:
         logger.info(f"\n✅ Batch {batch_id} completed: {successful_count}/{len(configs)} successful ({batch_time:.2f}s)")
 
         return batch_results
-
-
-
     def _update_stats(self, result: TestResultData):
         """Update statistics with thread safety"""
         with self.results_lock:
