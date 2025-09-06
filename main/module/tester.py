@@ -500,15 +500,20 @@ class EnhancedProxyTester:
         self.timeout = timeout
         self.batch_size = batch_size
         self.incremental_save = incremental_save
-        self.incremental_files = incremental_files or {
-            'shadowsocks': '../data/working_json/working_shadowsocks.txt',
-            'vmess': '../data/working_json/working_vmess.txt',
-            'vless': '../data/working_json/working_vless.txt'
+
+        import os
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+        # Replace all relative paths with absolute paths
+        self.incremental_files = {
+            'shadowsocks': os.path.join(BASE_DIR, '../data/working_json/working_shadowsocks.txt'),
+            'vmess': os.path.join(BASE_DIR, '../data/working_json/working_vmess.txt'),
+            'vless': os.path.join(BASE_DIR, '../data/working_json/working_vless.txt')
         }
         self.url_files = {
-            'shadowsocks': '../data/working_url/working_shadowsocks_urls.txt',
-            'vmess': '../data/working_url/working_vmess_urls.txt',
-            'vless': '../data/working_url/working_vless_urls.txt'
+            'shadowsocks': os.path.join(BASE_DIR, '../data/working_url/working_shadowsocks_urls.txt'),
+            'vmess': os.path.join(BASE_DIR, '../data/working_url/working_vmess_urls.txt'),
+            'vless': os.path.join(BASE_DIR, '../data/working_url/working_vless_urls.txt')
         }
         self.output_file_handles = {}
         self.url_file_handles = {}
