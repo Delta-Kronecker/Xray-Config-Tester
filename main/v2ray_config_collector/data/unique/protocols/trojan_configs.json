@@ -1,79 +1,314 @@
 {
   "metadata": {
     "protocol": "trojan",
-    "generated_at": "2025-09-06T16:56:35.724412",
-    "total_configs": 3
+    "generated_at": "2025-09-06T17:00:51.768320",
+    "total_configs": 17
   },
   "configs": [
     {
       "type": "trojan",
-      "server": "155.117.228.70",
-      "port": 26193,
-      "password": "7367d04e-4c59-4dff-a50e-12e730a09891",
-      "sni": "",
-      "alpn": "",
+      "server": "51.44.137.60",
+      "port": 22223,
+      "password": "telegram-id-directvpn",
+      "sni": "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @directvpn [15]",
+      "alpn": "http/1.1",
       "fingerprint": "",
       "allowInsecure": false,
       "remarks": "@XrayTurbo🔥",
-      "network": "tcp#@Daily_Configs",
+      "network": "tcp",
       "path": "",
       "host": "",
       "raw_params": {
         "security": [
           "tls"
         ],
+        "alpn": [
+          "http/1.1"
+        ],
         "headerType": [
           "none"
         ],
         "type": [
-          "tcp#@Daily_Configs"
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @directvpn [15]"
         ]
       },
-      "id": 322,
-      "line_number": 322,
-      "parsed_at": "2025-09-06T16:56:35.177746"
+      "id": 117,
+      "line_number": 117,
+      "parsed_at": "2025-09-06T17:00:51.054820"
     },
     {
       "type": "trojan",
-      "server": "104.26.4.60",
-      "port": 443,
-      "password": "bpb-trojan",
-      "sni": "zamim340.ggff.net#[",
-      "alpn": "",
+      "server": "18.194.230.54",
+      "port": 22223,
+      "password": "telegram-id-directvpn",
+      "sni": "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @directvpn [16]",
+      "alpn": "http/1.1",
       "fingerprint": "",
       "allowInsecure": false,
       "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @directvpn [16]"
+        ]
+      },
+      "id": 284,
+      "line_number": 284,
+      "parsed_at": "2025-09-06T17:00:51.060949"
+    },
+    {
+      "type": "trojan",
+      "server": "15.222.9.61",
+      "port": 22222,
+      "password": "telegram-id-directvpn",
+      "sni": "trj.rollingnext.co.uk",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "sni": [
+          "trj.rollingnext.co.uk"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "headerType": [
+          "none#🇨🇦 CA | 🔒 TROJAN | @v2rayngconfig [44]"
+        ]
+      },
+      "id": 444,
+      "line_number": 444,
+      "parsed_at": "2025-09-06T17:00:51.067894"
+    },
+    {
+      "type": "trojan",
+      "server": "maradona_vpn14.history-paint.art",
+      "port": 443,
+      "password": "maradona_vpn",
+      "sni": "teo.history-paint.art#❔ XX | 🔒 TROJAN | @maradona_vpn [7]",
+      "alpn": "http/1.1",
+      "fingerprint": "chrome",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
       "network": "ws",
-      "path": "/tr?ed=2560",
-      "host": "zamim340.ggff.net",
+      "path": "/wss24142?ed=2048",
+      "host": "teo.history-paint.art",
       "raw_params": {
         "path": [
-          "/tr?ed=2560"
+          "/wss24142?ed=2048"
         ],
         "security": [
           "tls"
         ],
+        "alpn": [
+          "http/1.1"
+        ],
         "host": [
-          "zamim340.ggff.net"
+          "teo.history-paint.art"
+        ],
+        "fp": [
+          "chrome"
         ],
         "type": [
           "ws"
         ],
         "sni": [
-          "zamim340.ggff.net#["
+          "teo.history-paint.art#❔ XX | 🔒 TROJAN | @maradona_vpn [7]"
         ]
       },
-      "id": 293,
-      "line_number": 293,
-      "parsed_at": "2025-09-06T16:56:35.176983"
+      "id": 460,
+      "line_number": 460,
+      "parsed_at": "2025-09-06T17:00:51.068507"
     },
     {
       "type": "trojan",
-      "server": "104.248.18.1",
-      "port": 1935,
-      "password": "6gZh2JbfhQ",
-      "sni": "x1-germany-digitalocean-v2.devefun.org#@meli_proxyy",
+      "server": "51.91.11.29",
+      "port": 80,
+      "password": "e0d44ae7-cb7d-4acc-a8c0-9861a6f5eaad",
+      "sni": "#🇫🇷 FR | 🔒 TROJAN | @v2rayngconfig [45]",
       "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "sni": [
+          "#🇫🇷 FR | 🔒 TROJAN | @v2rayngconfig [45]"
+        ]
+      },
+      "id": 635,
+      "line_number": 635,
+      "parsed_at": "2025-09-06T17:00:51.075316"
+    },
+    {
+      "type": "trojan",
+      "server": "13.36.17.197",
+      "port": 22222,
+      "password": "telegram-id-privatevpns",
+      "sni": "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @privatevpns [14]",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @privatevpns [14]"
+        ]
+      },
+      "id": 561,
+      "line_number": 561,
+      "parsed_at": "2025-09-06T17:00:51.072471"
+    },
+    {
+      "type": "trojan",
+      "server": "13.36.17.197",
+      "port": 22223,
+      "password": "telegram-id-directvpn",
+      "sni": "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @directvpn [14]",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @directvpn [14]"
+        ]
+      },
+      "id": 590,
+      "line_number": 590,
+      "parsed_at": "2025-09-06T17:00:51.073613"
+    },
+    {
+      "type": "trojan",
+      "server": "de1.test3.net",
+      "port": 443,
+      "password": "b8841c50-c3ad-11ee-9be0-1239d0255272",
+      "sni": "chatbuzzteambhm.chatbuzzt7150.workers.dev#🇩🇪 DE | 🔓 TROJAN | @teamvpnpro [7]",
+      "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "sni": [
+          "chatbuzzteambhm.chatbuzzt7150.workers.dev#🇩🇪 DE | 🔓 TROJAN | @teamvpnpro [7]"
+        ]
+      },
+      "id": 656,
+      "line_number": 656,
+      "parsed_at": "2025-09-06T17:00:51.076204"
+    },
+    {
+      "type": "trojan",
+      "server": "maradona_vpn10.history-paint.art",
+      "port": 443,
+      "password": "maradona_vpn",
+      "sni": "teo.history-paint.art#❔ XX | 🔒 TROJAN | @maradona_vpn [8]",
+      "alpn": "http/1.1",
+      "fingerprint": "chrome",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "ws",
+      "path": "/wss24142?ed=2048",
+      "host": "teo.history-paint.art",
+      "raw_params": {
+        "path": [
+          "/wss24142?ed=2048"
+        ],
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "host": [
+          "teo.history-paint.art"
+        ],
+        "fp": [
+          "chrome"
+        ],
+        "type": [
+          "ws"
+        ],
+        "sni": [
+          "teo.history-paint.art#❔ XX | 🔒 TROJAN | @maradona_vpn [8]"
+        ]
+      },
+      "id": 660,
+      "line_number": 660,
+      "parsed_at": "2025-09-06T17:00:51.076359"
+    },
+    {
+      "type": "trojan",
+      "server": "ca-sep6th.wimax.cc",
+      "port": 443,
+      "password": "dGaqoAFoO6",
+      "sni": "ca-sep6th.wimax.cc#🇨🇦 CA | 🔒 TROJAN | @free4allvpn [18]",
+      "alpn": "h2,http/1.1",
       "fingerprint": "chrome",
       "allowInsecure": false,
       "remarks": "@XrayTurbo🔥",
@@ -83,6 +318,9 @@
       "raw_params": {
         "security": [
           "tls"
+        ],
+        "alpn": [
+          "h2,http/1.1"
         ],
         "headerType": [
           "none"
@@ -94,12 +332,265 @@
           "tcp"
         ],
         "sni": [
-          "x1-germany-digitalocean-v2.devefun.org#@meli_proxyy"
+          "ca-sep6th.wimax.cc#🇨🇦 CA | 🔒 TROJAN | @free4allvpn [18]"
         ]
       },
-      "id": 312,
-      "line_number": 312,
-      "parsed_at": "2025-09-06T16:56:35.177475"
+      "id": 689,
+      "line_number": 689,
+      "parsed_at": "2025-09-06T17:00:51.077400"
+    },
+    {
+      "type": "trojan",
+      "server": "18.194.230.54",
+      "port": 22222,
+      "password": "telegram-id-privatevpns",
+      "sni": "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @privatevpns [16]",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @privatevpns [16]"
+        ]
+      },
+      "id": 726,
+      "line_number": 726,
+      "parsed_at": "2025-09-06T17:00:51.078698"
+    },
+    {
+      "type": "trojan",
+      "server": "146.190.87.238",
+      "port": 443,
+      "password": "oZAugtgF5T",
+      "sni": "aka.ms#🇸🇬 SG | 🔒 TROJAN | @mpmehi [1]",
+      "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "ws",
+      "path": "/",
+      "host": "aka.ms",
+      "raw_params": {
+        "path": [
+          "/"
+        ],
+        "security": [
+          "tls"
+        ],
+        "host": [
+          "aka.ms"
+        ],
+        "type": [
+          "ws"
+        ],
+        "sni": [
+          "aka.ms#🇸🇬 SG | 🔒 TROJAN | @mpmehi [1]"
+        ]
+      },
+      "id": 738,
+      "line_number": 738,
+      "parsed_at": "2025-09-06T17:00:51.079067"
+    },
+    {
+      "type": "trojan",
+      "server": "104.149.155.13",
+      "port": 443,
+      "password": "79c935c0-27dc-4383-b307-dcac1b8e5509",
+      "sni": "vzwzasc.cn",
+      "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "vzwzasc.cn#🇺🇸 US | 🔒 TROJAN | @ip_cf_config [11]",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "sni": [
+          "vzwzasc.cn"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "host": [
+          "vzwzasc.cn#🇺🇸 US | 🔒 TROJAN | @ip_cf_config [11]"
+        ]
+      },
+      "id": 813,
+      "line_number": 813,
+      "parsed_at": "2025-09-06T17:00:51.081812"
+    },
+    {
+      "type": "trojan",
+      "server": "maradona_vpn.history-paint.art",
+      "port": 443,
+      "password": "Maradona_vpn",
+      "sni": "teo.history-paint.art",
+      "alpn": "h2",
+      "fingerprint": "chrome",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "grpc",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "sni": [
+          "teo.history-paint.art"
+        ],
+        "alpn": [
+          "h2"
+        ],
+        "fp": [
+          "chrome"
+        ],
+        "type": [
+          "grpc"
+        ],
+        "serviceName": [
+          "grpc20337"
+        ],
+        "mode": [
+          "multi#❔ XX | 🔒 TROJAN | @maradona_vpn [9]"
+        ]
+      },
+      "id": 847,
+      "line_number": 847,
+      "parsed_at": "2025-09-06T17:00:51.083015"
+    },
+    {
+      "type": "trojan",
+      "server": "51.44.137.60",
+      "port": 22222,
+      "password": "telegram-id-privatevpns",
+      "sni": "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @privatevpns [15]",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇫🇷 FR | 🔒 TROJAN | @privatevpns [15]"
+        ]
+      },
+      "id": 922,
+      "line_number": 922,
+      "parsed_at": "2025-09-06T17:00:51.085863"
+    },
+    {
+      "type": "trojan",
+      "server": "3.70.33.164",
+      "port": 22222,
+      "password": "telegram-id-privatevpns",
+      "sni": "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @mt_proxy [7]",
+      "alpn": "http/1.1",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "alpn": [
+          "http/1.1"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "trojan.burgerip.co.uk#🇩🇪 DE | 🔒 TROJAN | @mt_proxy [7]"
+        ]
+      },
+      "id": 1292,
+      "line_number": 1292,
+      "parsed_at": "2025-09-06T17:00:51.099623"
+    },
+    {
+      "type": "trojan",
+      "server": "176.32.39.29",
+      "port": 443,
+      "password": "8OXD5VVt8s",
+      "sni": "journalofbigdata.springeropen.com",
+      "alpn": "",
+      "fingerprint": "random",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "reality"
+        ],
+        "pbk": [
+          "f_av3K6BFEs9abRaFgPJMKHz4ElZP7BP34ZlRtxysQ0"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "fp": [
+          "random"
+        ],
+        "spx": [
+          "/yethePcHjaf"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "journalofbigdata.springeropen.com"
+        ],
+        "sid": [
+          "109cb5faeb6b#🇷🇺 RU | 🔒 TROJAN | @ip_cf_config [13]"
+        ]
+      },
+      "id": 1337,
+      "line_number": 1337,
+      "parsed_at": "2025-09-06T17:00:51.101421"
     }
   ]
 }

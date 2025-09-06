@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "protocol": "tuic",
+    "generated_at": "2025-09-06T17:00:51.770001",
+    "total_configs": 2
+  },
+  "configs": [
+    {
+      "type": "tuic",
+      "server": "IP_CF----@79.137.206.126",
+      "port": 443,
+      "uuid": "7f9a73a3-e455-4053-ae38-f07719753dff",
+      "password": "----Join-Telegram:",
+      "version": "5",
+      "alpn": "h3,spdy/3.1",
+      "sni": "",
+      "allowInsecure": false,
+      "congestion_control": "cubic",
+      "udp_relay_mode": "native",
+      "reduce_rtt": false,
+      "remarks": "@XrayTurbo🔥",
+      "raw_params": {
+        "congestion_control": [
+          "cubic"
+        ],
+        "udp_relay_mode": [
+          "native"
+        ],
+        "alpn": [
+          "h3,spdy/3.1"
+        ],
+        "allow_insecure": [
+          "1#🇫🇮 FI | 🔒 TUIC | @goodbyefiltering [6]"
+        ]
+      },
+      "id": 686,
+      "line_number": 686,
+      "parsed_at": "2025-09-06T17:00:51.077283"
+    },
+    {
+      "type": "tuic",
+      "server": "IP_CF----@[2a12:5940:71f8::2]",
+      "port": 443,
+      "uuid": "7f9a73a3-e455-4053-ae38-f07719753dff",
+      "password": "----Join-Telegram:",
+      "version": "5",
+      "alpn": "h3,spdy/3.1",
+      "sni": "",
+      "allowInsecure": false,
+      "congestion_control": "cubic",
+      "udp_relay_mode": "native",
+      "reduce_rtt": false,
+      "remarks": "@XrayTurbo🔥",
+      "raw_params": {
+        "congestion_control": [
+          "cubic"
+        ],
+        "udp_relay_mode": [
+          "native"
+        ],
+        "alpn": [
+          "h3,spdy/3.1"
+        ],
+        "allow_insecure": [
+          "1#❔ XX | 🔒 TUIC | @goodbyefiltering [7]"
+        ]
+      },
+      "id": 717,
+      "line_number": 717,
+      "parsed_at": "2025-09-06T17:00:51.078339"
+    }
+  ]
+}
