@@ -441,7 +441,7 @@ class FastPortManager:
 class FastNetworkTester:
     """Optimized network tester with connection pooling"""
 
-    def __init__(self, timeout: int = 20):
+    def __init__(self, timeout: int = 60):
         self.timeout = timeout
         self.session = None
         if HAS_REQUESTS:
@@ -1655,7 +1655,7 @@ def main():
     parser.add_argument('--vmess', '-vm', help='VMess JSON config file')
     parser.add_argument('--vless', '-vl', help='VLESS JSON config file')
     parser.add_argument('--workers', '-w', type=int, default=1000, help='Number of concurrent workers')
-    parser.add_argument('--timeout', '-t', type=int, default=20, help='Connection timeout in seconds')
+    parser.add_argument('--timeout', '-t', type=int, default=60, help='Connection timeout in seconds')
     parser.add_argument('--batch-size', '-b', type=int, default=1000, help='Batch size for processing')
     parser.add_argument('--xray-path', '-x', help='Path to Xray executable')
     parser.add_argument('--no-incremental', action='store_true', help='Disable incremental saving')
