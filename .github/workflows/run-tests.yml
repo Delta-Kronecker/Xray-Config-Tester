@@ -1,32 +1,31 @@
-name: Test Proxy Configurations
+name: Run Proxy Tests and Upload Results
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'  # Run every 6 hours
+    - cron: '0 */6 * * *'
 
 jobs:
   test-proxies:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
+    runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
-
+    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9
-
+        python-version: '3.9'
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests pysocks tqdm psutil jq
-
+    
     - name: Install Xray-core
       run: |
         wget -q --show-progress -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
@@ -35,7 +34,7 @@ jobs:
         chmod +x xray
         sudo mv xray /usr/local/bin/
         echo "Xray-core installed successfully"
-
+    
     - name: Create directory structure
       run: |
         mkdir -p data/raw data/working_json data/working_url log
@@ -43,14 +42,14 @@ jobs:
         mkdir -p main/data/working_json main/data/working_url main/log
         mkdir -p reports
         echo "Directory structure created"
-
-    - name: Collect proxy configurations
+    
+    - name: Run config collector
       run: |
         cd main/v2ray_config_collector
         python main.py
         echo "Config collection completed"
-
-    - name: Show generated config files
+    
+    - name: Verify generated config files
       run: |
         echo "Generated config files:"
         ls -la main/v2ray_config_collector/data/unique/protocols/
@@ -62,11 +61,10 @@ jobs:
         
         echo "File sizes:"
         wc -c main/v2ray_config_collector/data/unique/protocols/*.json || echo "No JSON files found"
-
-    - name: Set up file paths
+    
+    - name: Setup file paths for testing
       run: |
         echo "Setting up correct file paths..."
-        
         cd main/module
         
         # Create the directories where tester will save files
@@ -102,7 +100,7 @@ jobs:
         echo "SS_FILE=$SS_FILE" >> $GITHUB_ENV
         echo "VMESS_FILE=$VMESS_FILE" >> $GITHUB_ENV
         echo "VLESS_FILE=$VLESS_FILE" >> $GITHUB_ENV
-
+    
     - name: Test Shadowsocks configurations
       run: |
         cd main/module
@@ -123,7 +121,7 @@ jobs:
           echo "Shadowsocks config file not available: $SS_FILE"
           exit 1
         fi
-
+    
     - name: Test VMess configurations
       run: |
         cd main/module
@@ -148,7 +146,7 @@ jobs:
         else
           echo "Skipping VMess tests - config file not available: $VMESS_FILE"
         fi
-
+    
     - name: Test VLESS configurations
       run: |
         cd main/module
@@ -173,8 +171,8 @@ jobs:
         else
           echo "Skipping VLESS tests - config file not available: $VLESS_FILE"
         fi
-
-    - name: Copy test results
+    
+    - name: Copy test results to root directories
       run: |
         echo "Copying test results to root directories..."
         
@@ -198,7 +196,7 @@ jobs:
         ls -la data/working_url/ 2>/dev/null || echo "No URL results"
         echo "Log files:"
         ls -la log/ 2>/dev/null || echo "No log files"
-
+    
     - name: Generate test report
       run: |
         echo "Generating test report..."
@@ -265,8 +263,8 @@ jobs:
         echo "- Commit: $GITHUB_SHA" >> reports/test_summary.md
         
         echo "Test report generated with $TOTAL_WORKING working configs"
-
-    - name: Upload test results
+    
+    - name: Upload test results as artifact
       uses: actions/upload-artifact@v4
       with:
         name: proxy-test-results
@@ -275,10 +273,21 @@ jobs:
           data/working_url/
           log/
           reports/
-
-    - name: Upload summary
-      if: always()
+        if-no-files-found: warn
+    
+    - name: Upload test summary as artifact
       uses: actions/upload-artifact@v4
       with:
         name: test-summary
         path: reports/test_summary.md
+        if-no-files-found: warn
+    
+    - name: Commit and push results to repository
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add data/ log/ reports/
+        git commit -m "Auto-update: Test results (${{ env.TOTAL_WORKING }} working configs) - $(date +'%Y-%m-%d %H:%M')"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
