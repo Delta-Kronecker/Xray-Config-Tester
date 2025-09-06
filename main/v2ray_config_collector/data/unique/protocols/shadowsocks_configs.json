@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "protocol": "shadowsocks",
+    "generated_at": "2025-09-06T16:56:35.716583",
+    "total_configs": 7
+  },
+  "configs": [
+    {
+      "type": "shadowsocks",
+      "server": "193.29.139.209",
+      "port": 8080,
+      "method": "chacha20-ietf-poly1305",
+      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 183,
+      "line_number": 183,
+      "parsed_at": "2025-09-06T16:56:35.173923"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "45.87.175.10",
+      "port": 8080,
+      "method": "chacha20-ietf-poly1305",
+      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 261,
+      "line_number": 261,
+      "parsed_at": "2025-09-06T16:56:35.176089"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "45.87.175.22",
+      "port": 8080,
+      "method": "chacha20-ietf-poly1305",
+      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 263,
+      "line_number": 263,
+      "parsed_at": "2025-09-06T16:56:35.176174"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "212.102.53.81",
+      "port": 443,
+      "method": "aes-128-gcm",
+      "password": "shadowsocks",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 298,
+      "line_number": 298,
+      "parsed_at": "2025-09-06T16:56:35.177081"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "switcher-nick-croquet.freesocks.work",
+      "port": 443,
+      "method": "chacha20-ietf-poly1305",
+      "password": "9tqhMdIrTkgQ46PvhyAtMH",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 319,
+      "line_number": 319,
+      "parsed_at": "2025-09-06T16:56:35.177687"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "194.87.71.223",
+      "port": 2222,
+      "method": "chacha20-ietf-poly1305",
+      "password": "qscavF5UviIL-8V-E4raBA",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 334,
+      "line_number": 334,
+      "parsed_at": "2025-09-06T16:56:35.178111"
+    },
+    {
+      "type": "shadowsocks",
+      "server": "4.223.106.151",
+      "port": 48172,
+      "method": "chacha20-ietf-poly1305",
+      "password": "51yloQC8D9w1Wae7FHtI65",
+      "remarks": "@XrayTurbo🔥",
+      "plugin": "",
+      "plugin_opts": "",
+      "id": 345,
+      "line_number": 345,
+      "parsed_at": "2025-09-06T16:56:35.178441"
+    }
+  ]
+}

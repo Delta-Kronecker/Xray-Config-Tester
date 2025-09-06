@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "protocol": "trojan",
+    "generated_at": "2025-09-06T16:56:35.724412",
+    "total_configs": 3
+  },
+  "configs": [
+    {
+      "type": "trojan",
+      "server": "155.117.228.70",
+      "port": 26193,
+      "password": "7367d04e-4c59-4dff-a50e-12e730a09891",
+      "sni": "",
+      "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp#@Daily_Configs",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "type": [
+          "tcp#@Daily_Configs"
+        ]
+      },
+      "id": 322,
+      "line_number": 322,
+      "parsed_at": "2025-09-06T16:56:35.177746"
+    },
+    {
+      "type": "trojan",
+      "server": "104.26.4.60",
+      "port": 443,
+      "password": "bpb-trojan",
+      "sni": "zamim340.ggff.net#[",
+      "alpn": "",
+      "fingerprint": "",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "ws",
+      "path": "/tr?ed=2560",
+      "host": "zamim340.ggff.net",
+      "raw_params": {
+        "path": [
+          "/tr?ed=2560"
+        ],
+        "security": [
+          "tls"
+        ],
+        "host": [
+          "zamim340.ggff.net"
+        ],
+        "type": [
+          "ws"
+        ],
+        "sni": [
+          "zamim340.ggff.net#["
+        ]
+      },
+      "id": 293,
+      "line_number": 293,
+      "parsed_at": "2025-09-06T16:56:35.176983"
+    },
+    {
+      "type": "trojan",
+      "server": "104.248.18.1",
+      "port": 1935,
+      "password": "6gZh2JbfhQ",
+      "sni": "x1-germany-digitalocean-v2.devefun.org#@meli_proxyy",
+      "alpn": "",
+      "fingerprint": "chrome",
+      "allowInsecure": false,
+      "remarks": "@XrayTurbo🔥",
+      "network": "tcp",
+      "path": "",
+      "host": "",
+      "raw_params": {
+        "security": [
+          "tls"
+        ],
+        "headerType": [
+          "none"
+        ],
+        "fp": [
+          "chrome"
+        ],
+        "type": [
+          "tcp"
+        ],
+        "sni": [
+          "x1-germany-digitalocean-v2.devefun.org#@meli_proxyy"
+        ]
+      },
+      "id": 312,
+      "line_number": 312,
+      "parsed_at": "2025-09-06T16:56:35.177475"
+    }
+  ]
+}

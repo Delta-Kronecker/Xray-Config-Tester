@@ -1,0 +1,139 @@
+
+[2025-09-06 16:56:36,004] INFO     Port pool ready (10000-20000)
+[2025-09-06 16:56:36,135] INFO     Port pool initialized (10001 ports)
+[2025-09-06 16:56:36,145] INFO     Xray version: 25.9.5
+[2025-09-06 16:56:36,145] INFO     Incremental save files ready
+[2025-09-06 16:56:36,145] INFO     Tester ready | workers=200 batch=500
+[2025-09-06 16:56:36,145] INFO     Incremental save active
+[2025-09-06 16:56:36,146] INFO     Loading shadowsocks from ../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json
+[2025-09-06 16:56:36,146] INFO     Loaded shadowsocks: total=7 parsed=7 invalid=0 dupes=0 unique=7
+[2025-09-06 16:56:36,146] INFO     Total unique configs: 7
+[2025-09-06 16:56:36,147] INFO     Testing 7 configs | workers=200 timeout=10s batch=500
+[2025-09-06 16:56:36,147] INFO     Batch 1 – 7 configs
+[2025-09-06 16:56:36,147] INFO     Batch 1 – 7 configs
+[2025-09-06 16:56:37,019] INFO     SUCCESS 193.29.139.209:8080 0.333s
+[2025-09-06 16:56:37,068] INFO     SUCCESS 45.87.175.10:8080 0.343s
+[2025-09-06 16:56:37,125] INFO     SUCCESS 212.102.53.81:443 0.443s
+[2025-09-06 16:56:40,247] INFO     SUCCESS 45.87.175.22:8080 2.204s
+[2025-09-06 16:56:48,159] WARNING  Cleaned 3 hanging operations
+[2025-09-06 16:56:51,212] WARNING  Batch 1 – global timeout, cancelling
+[2025-09-06 16:57:57,213] INFO     Batch 1 – 4/7 ok (81.1s)
+[2025-09-06 16:57:58,231] INFO     ============================================================
+[2025-09-06 16:57:58,231] INFO     FINAL SUMMARY
+[2025-09-06 16:57:58,231] INFO     ============================================================
+[2025-09-06 16:57:58,231] INFO     Total tested: 7
+[2025-09-06 16:57:58,231] INFO     Successful  : 4
+[2025-09-06 16:57:58,231] INFO     Failed      : 3
+[2025-09-06 16:57:58,231] INFO     Success rate: 57.14%
+[2025-09-06 16:57:58,231] INFO     SHADOWSOCKS : 4/7 (57.1%)
+[2025-09-06 16:57:58,231] INFO     Error breakdown:
+[2025-09-06 16:57:58,231] INFO       Timeout           : 2 (28.6%)
+[2025-09-06 16:57:58,232] INFO     Response times (success only): avg=0.831s min=0.333s max=2.204s
+[2025-09-06 16:57:58,232] INFO     ============================================================
+[2025-09-06 16:57:58,232] INFO     Testing complete – results saved to test_results.json
+[2025-09-06 16:57:58,232] INFO     Working configs saved to:
+[2025-09-06 16:57:58,232] INFO       JSON: ../data/working_json/working_shadowsocks.txt
+[2025-09-06 16:57:58,232] INFO       URL : ../data/working_url/working_shadowsocks_urls.txt
+[2025-09-06 16:57:58,232] INFO       JSON: ../data/working_json/working_vmess.txt
+[2025-09-06 16:57:58,232] INFO       URL : ../data/working_url/working_vmess_urls.txt
+[2025-09-06 16:57:58,232] INFO       JSON: ../data/working_json/working_vless.txt
+[2025-09-06 16:57:58,232] INFO       URL : ../data/working_url/working_vless_urls.txt
+[2025-09-06 16:57:58,416] INFO     Port pool ready (10000-20000)
+[2025-09-06 16:57:58,549] INFO     Port pool initialized (10001 ports)
+[2025-09-06 16:57:58,559] INFO     Xray version: 25.9.5
+[2025-09-06 16:57:58,560] INFO     Incremental save files ready
+[2025-09-06 16:57:58,560] INFO     Tester ready | workers=200 batch=500
+[2025-09-06 16:57:58,560] INFO     Incremental save active
+[2025-09-06 16:57:58,560] INFO     Loading vmess from ../v2ray_config_collector/data/unique/protocols/vmess_configs.json
+[2025-09-06 16:57:58,560] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,561] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,561] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,561] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,561] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,561] INFO     Loaded vmess: total=5 parsed=0 invalid=0 dupes=0 unique=0
+[2025-09-06 16:57:58,561] ERROR    No valid configs to test
+[2025-09-06 16:57:58,743] INFO     Port pool ready (10000-20000)
+[2025-09-06 16:57:58,876] INFO     Port pool initialized (10001 ports)
+[2025-09-06 16:57:58,886] INFO     Xray version: 25.9.5
+[2025-09-06 16:57:58,886] INFO     Incremental save files ready
+[2025-09-06 16:57:58,887] INFO     Tester ready | workers=200 batch=500
+[2025-09-06 16:57:58,887] INFO     Incremental save active
+[2025-09-06 16:57:58,887] INFO     Loading vless from ../v2ray_config_collector/data/unique/protocols/vless_configs.json
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,889] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,890] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,891] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] DEBUG    Parse failed: 'int' object has no attribute 'replace'
+[2025-09-06 16:57:58,892] INFO     Loaded vless: total=76 parsed=0 invalid=0 dupes=0 unique=0
+[2025-09-06 16:57:58,892] ERROR    No valid configs to test
