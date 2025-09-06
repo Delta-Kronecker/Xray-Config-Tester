@@ -301,7 +301,7 @@ jobs:
         echo "- VMess: $WORKING_VMESS"
         echo "- Total: $TOTAL_WORKING"
 
-    - name: Send notification on failure  
+    - name: Send notification on failure
       if: failure()
       run: |
         echo "Proxy tests failed!"
