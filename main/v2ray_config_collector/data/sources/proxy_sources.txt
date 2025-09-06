@@ -1,7 +1,1 @@
-https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub5.txt 
-https://raw.githubusercontent.com/coldwater-10/V2ray-Config-Lite/main/Sub5.txt 
-https://raw.githubusercontent.com/Bardiafa/Free-V2ray-Config/main/Sub6.txt 
-https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub6.txt 
-https://raw.githubusercontent.com/coldwater-10/V2ray-Config-Lite/main/Sub6.txt 
-https://raw.githubusercontent.com/Bardiafa/Free-V2ray-Config/main/Sub7.txt 
-https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub7.txt 
+https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt
