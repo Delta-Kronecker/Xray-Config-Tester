@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests pysocks tqdm psutil
+        pip install requests pysocks tqdm psutil jq
 
     - name: Download Xray-core for Linux
       run: |
@@ -69,6 +69,9 @@ jobs:
         
         cd main/module
         
+        # Create the directories where tester will save files
+        mkdir -p ../data/working_json ../data/working_url ../log
+        
         if [ -f "../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
           echo "Found shadowsocks config at expected path"
           SS_FILE="../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json"
@@ -99,8 +102,6 @@ jobs:
         echo "SS_FILE=$SS_FILE" >> $GITHUB_ENV
         echo "VMESS_FILE=$VMESS_FILE" >> $GITHUB_ENV  
         echo "VLESS_FILE=$VLESS_FILE" >> $GITHUB_ENV
-        
-        mkdir -p ../data/working_json ../data/working_url ../log
 
     - name: Run Shadowsocks tests
       run: |
@@ -129,16 +130,21 @@ jobs:
         if [ -n "$VMESS_FILE" ] && [ -f "$VMESS_FILE" ]; then
           echo "Testing VMess configurations..."
           echo "Config file: $VMESS_FILE"
-          echo "Config count: $(jq '.configs | length' "$VMESS_FILE" 2>/dev/null || echo "Unable to count")"
+          config_count=$(jq '.configs | length' "$VMESS_FILE" 2>/dev/null || echo "0")
+          echo "Config count: $config_count"
           
-          python tester.py \
-            --vmess "$VMESS_FILE" \
-            --xray-path /usr/local/bin/xray \
-            --workers 200 \
-            --timeout 10 \
-            --batch-size 500
-            
-          echo "VMess tests completed"
+          if [ "$config_count" -gt 0 ]; then
+            python tester.py \
+              --vmess "$VMESS_FILE" \
+              --xray-path /usr/local/bin/xray \
+              --workers 200 \
+              --timeout 10 \
+              --batch-size 500
+              
+            echo "VMess tests completed"
+          else
+            echo "Skipping VMess tests - no valid configs found in file"
+          fi
         else
           echo "Skipping VMess tests - config file not available: $VMESS_FILE"
         fi
@@ -149,16 +155,21 @@ jobs:
         if [ -n "$VLESS_FILE" ] && [ -f "$VLESS_FILE" ]; then
           echo "Testing VLESS configurations..."
           echo "Config file: $VLESS_FILE"
-          echo "Config count: $(jq '.configs | length' "$VLESS_FILE" 2>/dev/null || echo "Unable to count")"
+          config_count=$(jq '.configs | length' "$VLESS_FILE" 2>/dev/null || echo "0")
+          echo "Config count: $config_count"
           
-          python tester.py \
-            --vless "$VLESS_FILE" \
-            --xray-path /usr/local/bin/xray \
-            --workers 200 \
-            --timeout 10 \
-            --batch-size 500
-            
-          echo "VLESS tests completed"
+          if [ "$config_count" -gt 0 ]; then
+            python tester.py \
+              --vless "$VLESS_FILE" \
+              --xray-path /usr/local/bin/xray \
+              --workers 200 \
+              --timeout 10 \
+              --batch-size 500
+              
+            echo "VLESS tests completed"
+          else
+            echo "Skipping VLESS tests - no valid configs found in file"
+          fi
         else
           echo "Skipping VLESS tests - config file not available: $VLESS_FILE"
         fi
@@ -167,6 +178,7 @@ jobs:
       run: |
         echo "Copying test results to root directories..."
         
+        # Copy from the exact paths where tester saves files
         if [ -d "main/data/working_json" ]; then
           cp -r main/data/working_json/* data/working_json/ 2>/dev/null || echo "No working_json files to copy"
         fi
@@ -197,11 +209,10 @@ jobs:
         
         echo "Checking working config files..."
         
+        # Count actual JSON objects in files, not just lines
         if [ -f "data/working_json/working_shadowsocks.txt" ]; then
           echo "Found shadowsocks results file"
-          WORKING_SS=$(grep -c '"protocol".*"shadowsocks"' data/working_json/working_shadowsocks.txt 2>/dev/null || echo "0")
-          WORKING_SS=$(echo "$WORKING_SS" | tr -d '\r\n' | grep -o '[0-9]*' | head -1 || echo "0")
-          [ -z "$WORKING_SS" ] && WORKING_SS=0
+          WORKING_SS=$(grep -c '^{' data/working_json/working_shadowsocks.txt 2>/dev/null || echo "0")
           echo "Shadowsocks working configs: $WORKING_SS"
         else
           echo "No shadowsocks results file found"
@@ -209,9 +220,7 @@ jobs:
         
         if [ -f "data/working_json/working_vless.txt" ]; then
           echo "Found vless results file"
-          WORKING_VLESS=$(grep -c '"protocol".*"vless"' data/working_json/working_vless.txt 2>/dev/null || echo "0")
-          WORKING_VLESS=$(echo "$WORKING_VLESS" | tr -d '\r\n' | grep -o '[0-9]*' | head -1 || echo "0")
-          [ -z "$WORKING_VLESS" ] && WORKING_VLESS=0
+          WORKING_VLESS=$(grep -c '^{' data/working_json/working_vless.txt 2>/dev/null || echo "0")
           echo "VLESS working configs: $WORKING_VLESS"
         else
           echo "No vless results file found"
@@ -219,18 +228,13 @@ jobs:
         
         if [ -f "data/working_json/working_vmess.txt" ]; then
           echo "Found vmess results file"
-          WORKING_VMESS=$(grep -c '"protocol".*"vmess"' data/working_json/working_vmess.txt 2>/dev/null || echo "0")
-          WORKING_VMESS=$(echo "$WORKING_VMESS" | tr -d '\r\n' | grep -o '[0-9]*' | head -1 || echo "0")
-          [ -z "$WORKING_VMESS" ] && WORKING_VMESS=0
+          WORKING_VMESS=$(grep -c '^{' data/working_json/working_vmess.txt 2>/dev/null || echo "0")
           echo "VMess working configs: $WORKING_VMESS"
         else
           echo "No vmess results file found"
         fi
         
-        TOTAL_WORKING=0
-        TOTAL_WORKING=$((TOTAL_WORKING + WORKING_SS))
-        TOTAL_WORKING=$((TOTAL_WORKING + WORKING_VLESS))
-        TOTAL_WORKING=$((TOTAL_WORKING + WORKING_VMESS))
+        TOTAL_WORKING=$((WORKING_SS + WORKING_VLESS + WORKING_VMESS))
         
         echo "Total working configs: $TOTAL_WORKING"
         
