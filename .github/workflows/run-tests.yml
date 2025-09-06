@@ -93,8 +93,3 @@ jobs:
 
 
 
-
-
-            'shadowsocks': '../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json',
-            'vmess': '../v2ray_config_collector/data/unique/protocols/vmess_configs.json',
-            'vless': '../v2ray_config_collector/data/unique/protocols/vless_configs.json'
