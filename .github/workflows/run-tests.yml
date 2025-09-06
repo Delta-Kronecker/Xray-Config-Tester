@@ -63,13 +63,13 @@ jobs:
         cd main/module
         # تست تمام فایل‌های پیکربندی موجود
         if [ -f "../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
-          python tester.py --shadowsocks ../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+          python tester.py --shadowsocks ../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json --xray-path /usr/local/bin/xray
         fi
         if [ -f "../v2ray_config_collector/data/unique/protocols/vmess_configs.json" ]; then
-          python tester.py --vmess ../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray
+          python tester.py --vmess ../v2ray_config_collector/data/unique/protocols/vmess_configs.json --xray-path /usr/local/bin/xray
         fi
         if [ -f "../v2ray_config_collector/data/unique/protocols/vless_configs.json'" ]; then
-          python tester.py --vless ../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
+          python tester.py --vless ../v2ray_config_collector/data/unique/protocols/vless_configs.json --xray-path /usr/local/bin/xray
         fi
 
     - name: Configure git for push
