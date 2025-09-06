@@ -1,22 +1,21 @@
-TROJAN Configs - Generated on 2025-09-06 17:06:23
-Total configs: 18
+TROJAN Configs - Generated on 2025-09-06 17:13:36
+Total configs: 17
 Ready-to-use URLs below:
 
-trojan://maradona_vpn@maradona_vpn10.history-paint.art:443?sni=teo.history-paint.art%23%E2%9D%94+XX+%7C+%F0%9F%94%92+TROJAN+%7C+%40maradona_vpn+%5B8%5D&alpn=http%2F1.1&fp=chrome&type=ws&path=%2Fwss24142%3Fed%3D2048&host=teo.history-paint.art#%40XrayTurbo%F0%9F%94%A5
-trojan://Maradona_vpn@maradona_vpn.history-paint.art:443?sni=teo.history-paint.art&alpn=h2&fp=chrome&type=grpc#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-privatevpns@18.194.230.54:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40privatevpns+%5B16%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://fa9b326c-ca6f-4bb2-88f5-a163b404fcf8@asia.artunnel57.host:80?type=ws&path=%252Ftrojan-ntls&host=asia.artunnel57.host%23%E2%9D%94+XX+%7C+%F0%9F%94%93+TROJAN+%7C+%40armodchannel+%5B61%5D#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-directvpn@51.44.137.60:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B15%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://dGaqoAFoO6@ca-sep6th.wimax.cc:443?sni=ca-sep6th.wimax.cc%23%F0%9F%87%A8%F0%9F%87%A6+CA+%7C+%F0%9F%94%92+TROJAN+%7C+%40free4allvpn+%5B18%5D&alpn=h2%2Chttp%2F1.1&fp=chrome&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-directvpn@13.36.17.197:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B14%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://b8841c50-c3ad-11ee-9be0-1239d0255272@de1.test3.net:443?sni=chatbuzzteambhm.chatbuzzt7150.workers.dev%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%93+TROJAN+%7C+%40teamvpnpro+%5B7%5D&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-privatevpns@51.44.137.60:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40privatevpns+%5B15%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://e0d44ae7-cb7d-4acc-a8c0-9861a6f5eaad@51.91.11.29:80?sni=%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40v2rayngconfig+%5B45%5D&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-directvpn@18.194.230.54:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B16%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-privatevpns@3.70.33.164:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40mt_proxy+%5B7%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
 trojan://oZAugtgF5T@146.190.87.238:443?sni=aka.ms%23%F0%9F%87%B8%F0%9F%87%AC+SG+%7C+%F0%9F%94%92+TROJAN+%7C+%40mpmehi+%5B1%5D&type=ws&path=%2F&host=aka.ms#%40XrayTurbo%F0%9F%94%A5
 trojan://79c935c0-27dc-4383-b307-dcac1b8e5509@104.149.155.13:443?sni=vzwzasc.cn&type=tcp&host=vzwzasc.cn%23%F0%9F%87%BA%F0%9F%87%B8+US+%7C+%F0%9F%94%92+TROJAN+%7C+%40ip_cf_config+%5B11%5D#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-directvpn@15.222.9.61:22222?sni=trj.rollingnext.co.uk&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://maradona_vpn@maradona_vpn14.history-paint.art:443?sni=teo.history-paint.art%23%E2%9D%94+XX+%7C+%F0%9F%94%92+TROJAN+%7C+%40maradona_vpn+%5B7%5D&alpn=http%2F1.1&fp=chrome&type=ws&path=%2Fwss24142%3Fed%3D2048&host=teo.history-paint.art#%40XrayTurbo%F0%9F%94%A5
+trojan://Maradona_vpn@maradona_vpn.history-paint.art:443?sni=teo.history-paint.art&alpn=h2&fp=chrome&type=grpc#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-directvpn@18.194.230.54:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B16%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://maradona_vpn@maradona_vpn10.history-paint.art:443?sni=teo.history-paint.art%23%E2%9D%94+XX+%7C+%F0%9F%94%92+TROJAN+%7C+%40maradona_vpn+%5B8%5D&alpn=http%2F1.1&fp=chrome&type=ws&path=%2Fwss24142%3Fed%3D2048&host=teo.history-paint.art#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-privatevpns@18.194.230.54:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40privatevpns+%5B16%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://b8841c50-c3ad-11ee-9be0-1239d0255272@de1.test3.net:443?sni=chatbuzzteambhm.chatbuzzt7150.workers.dev%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%93+TROJAN+%7C+%40teamvpnpro+%5B7%5D&type=tcp#%40XrayTurbo%F0%9F%94%A5
 trojan://8OXD5VVt8s@176.32.39.29:443?sni=journalofbigdata.springeropen.com&fp=random&type=tcp#%40XrayTurbo%F0%9F%94%A5
-trojan://telegram-id-privatevpns@3.70.33.164:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%A9%F0%9F%87%AA+DE+%7C+%F0%9F%94%92+TROJAN+%7C+%40mt_proxy+%5B7%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-directvpn@15.222.9.61:22222?sni=trj.rollingnext.co.uk&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-directvpn@13.36.17.197:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B14%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://dGaqoAFoO6@ca-sep6th.wimax.cc:443?sni=ca-sep6th.wimax.cc%23%F0%9F%87%A8%F0%9F%87%A6+CA+%7C+%F0%9F%94%92+TROJAN+%7C+%40free4allvpn+%5B18%5D&alpn=h2%2Chttp%2F1.1&fp=chrome&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://e0d44ae7-cb7d-4acc-a8c0-9861a6f5eaad@51.91.11.29:80?sni=%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40v2rayngconfig+%5B45%5D&type=tcp#%40XrayTurbo%F0%9F%94%A5
 trojan://telegram-id-privatevpns@13.36.17.197:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40privatevpns+%5B14%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-privatevpns@51.44.137.60:22222?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40privatevpns+%5B15%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://telegram-id-directvpn@51.44.137.60:22223?sni=trojan.burgerip.co.uk%23%F0%9F%87%AB%F0%9F%87%B7+FR+%7C+%F0%9F%94%92+TROJAN+%7C+%40directvpn+%5B15%5D&alpn=http%2F1.1&type=tcp#%40XrayTurbo%F0%9F%94%A5
+trojan://maradona_vpn@maradona_vpn14.history-paint.art:443?sni=teo.history-paint.art%23%E2%9D%94+XX+%7C+%F0%9F%94%92+TROJAN+%7C+%40maradona_vpn+%5B7%5D&alpn=http%2F1.1&fp=chrome&type=ws&path=%2Fwss24142%3Fed%3D2048&host=teo.history-paint.art#%40XrayTurbo%F0%9F%94%A5

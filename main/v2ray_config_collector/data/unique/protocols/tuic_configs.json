@@ -1,7 +1,7 @@
 {
   "metadata": {
     "protocol": "tuic",
-    "generated_at": "2025-09-06T17:06:23.949740",
+    "generated_at": "2025-09-06T17:13:36.567837",
     "total_configs": 2
   },
   "configs": [
@@ -33,9 +33,9 @@
           "1#🇫🇮 FI | 🔒 TUIC | @goodbyefiltering [6]"
         ]
       },
-      "id": 20,
-      "line_number": 20,
-      "parsed_at": "2025-09-06T17:06:23.239530"
+      "id": 166,
+      "line_number": 166,
+      "parsed_at": "2025-09-06T17:13:35.859376"
     },
     {
       "type": "tuic",
@@ -65,9 +65,9 @@
           "1#❔ XX | 🔒 TUIC | @goodbyefiltering [7]"
         ]
       },
-      "id": 745,
-      "line_number": 745,
-      "parsed_at": "2025-09-06T17:06:23.268453"
+      "id": 1072,
+      "line_number": 1072,
+      "parsed_at": "2025-09-06T17:13:35.894100"
     }
   ]
 }
