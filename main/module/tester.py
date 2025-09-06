@@ -441,7 +441,7 @@ class FastPortManager:
 class FastNetworkTester:
     """Optimized network tester with connection pooling"""
 
-    def __init__(self, timeout: int = 60):
+    def __init__(self, timeout: int = 8):
         self.timeout = timeout
         self.session = None
         if HAS_REQUESTS:
@@ -617,10 +617,10 @@ class EnhancedProxyTester:
 
     def __init__(self,
                  xray_path: Optional[str] = None,
-                 max_workers: int = 1000,  # Reduced from 500 to prevent system overload
-                 timeout: int = 15,  # Increased timeout for better success rate
+                 max_workers: int = 1000,  # کاهش چشمگیر از ۴۰۰ به ۵۰
+                 timeout: int = 8,  # کاهش از ۱۵ به ۸ ثانیه
                  port_range: Tuple[int, int] = (10000, 20000),
-                 batch_size: int = 1000,  # Reduced from 500
+                 batch_size: int = 1000,  # کاهش از ۴۰۰ به ۵۰
                  incremental_save: bool = True,
                  incremental_files: Dict[str, str] = None):
 
@@ -1203,12 +1203,12 @@ class EnhancedProxyTester:
                 json.dump(xray_config, f, indent=2)
                 config_file = f.name
 
-            # Test config syntax first
+            # Test config syntax first - کاهش زمان timeout
             try:
                 syntax_test = subprocess.run(
                     [self.xray_path, 'run', '-test', '-config', config_file],
                     capture_output=True,
-                    timeout=2,
+                    timeout=1.0,  # کاهش از ۲ به ۱ ثانیه
                     text=True,
                     encoding='utf-8',
                     errors='ignore'
@@ -1230,7 +1230,7 @@ class EnhancedProxyTester:
                     batch_id=batch_id
                 )
 
-            # Start Xray process
+            # Start Xray process with timeout
             with open(os.devnull, 'w') as devnull:
                 process = subprocess.Popen(
                     [self.xray_path, 'run', '-config', config_file],
@@ -1243,8 +1243,8 @@ class EnhancedProxyTester:
 
             self.process_manager.register_process(process)
 
-            # Wait for Xray to start (increased wait time)
-            time.sleep(2.0)  # Increased from 0.1 to 2.0 seconds
+            # Wait for Xray to start - کاهش زمان انتظار
+            time.sleep(0.5)  # کاهش از ۲.۰ به ۰.۵ ثانیه
 
             # Check if process is still running
             if process.poll() is not None:
@@ -1256,7 +1256,7 @@ class EnhancedProxyTester:
                     batch_id=batch_id
                 )
 
-            # Test connection through proxy
+            # Test connection through proxy - کاهش زمان timeout
             success, external_ip, response_time = self.network_tester.test_proxy_connection(proxy_port)
 
             if success:
@@ -1271,7 +1271,6 @@ class EnhancedProxyTester:
                 )
                 logger.info(
                     f"\n✅ SUCCESS: {config.protocol.value}://{config.server}:{config.port} ({response_time:.3f}s)")
-                # Save immediately and log in one clean message
                 self._save_config_immediately(result)
                 return result
             else:
@@ -1301,10 +1300,16 @@ class EnhancedProxyTester:
                 batch_id=batch_id
             )
         finally:
-            # Cleanup process
+            # Cleanup process - بهبود terminate
             if process:
                 try:
-                    self.process_manager._force_kill_process(process)
+                    # terminate سریع‌تر
+                    process.terminate()
+                    try:
+                        process.wait(timeout=0.5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=0.5)
                     self.process_manager.unregister_process(process)
                 except:
                     pass
@@ -1349,9 +1354,11 @@ class EnhancedProxyTester:
 
         logger.info(f"\n🧪 Testing batch {batch_id} with {len(configs)} configurations...")
 
-        # Use ThreadPoolExecutor with limited workers and better error handling
+        # استفاده از ThreadPoolExecutor با timeout بهینه
         with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as executor:
             future_to_config = {}
+
+            # ارسال تمام تسک‌ها
             for config in configs:
                 try:
                     future = executor.submit(self._test_single_config, config, batch_id)
@@ -1374,23 +1381,22 @@ class EnhancedProxyTester:
                 logger.info(f"Progress: 0/{len(configs)}")
 
             try:
-                for future in as_completed(future_to_config, timeout=self.timeout + 5):
+                # استفاده از timeout پویا بر اساس تعداد کانفیگ‌ها
+                dynamic_timeout = min(self.timeout + 10, self.timeout * 2)
+
+                for future in as_completed(future_to_config, timeout=dynamic_timeout):
                     config = future_to_config[future]
                     tested_count += 1
 
                     try:
                         result = future.result(timeout=1.0)
                         batch_results.append(result)
-
-                        # Update statistics
                         self._update_stats(result)
 
-                        # Save successful configs immediately
                         if result.result == TestResult.SUCCESS:
                             successful_count += 1
                             self._save_config_immediately(result)
 
-                        # Update progress
                         if HAS_TQDM:
                             progress_bar.update(1)
                             progress_bar.set_postfix({
@@ -1424,14 +1430,14 @@ class EnhancedProxyTester:
                         self._update_stats(error_result)
 
             except TimeoutError:
-                # Handle case where as_completed times out
-                logger.warning(f"\n⏰ Batch {batch_id}: Timeout reached, processing remaining futures")
+                logger.warning(f"\n⏰ Batch {batch_id}: Timeout reached, cancelling remaining futures")
 
-                # Cancel and process remaining futures
+                # Cancel سریع‌تر futures
+                cancelled_count = 0
                 for future, config in future_to_config.items():
                     if not future.done():
                         future.cancel()
-                        tested_count += 1
+                        cancelled_count += 1
                         error_result = TestResultData(
                             config=config,
                             result=TestResult.TIMEOUT,
@@ -1442,23 +1448,22 @@ class EnhancedProxyTester:
                         batch_results.append(error_result)
                         self._update_stats(error_result)
 
-                        if HAS_TQDM:
-                            progress_bar.update(1)
+                logger.info(f"Cancelled {cancelled_count} pending futures")
 
-            if HAS_TQDM:
-                progress_bar.close()
+            finally:
+                # shutdown سریع‌تر
+                try:
+                    executor.shutdown(wait=False, cancel_futures=True)
+                except:
+                    pass
 
-        # Force cleanup any remaining tasks
-        try:
-            executor.shutdown(wait=False)
-        except:
-            pass
+                if HAS_TQDM:
+                    progress_bar.close()
 
         batch_time = time.time() - batch_start
         logger.info(f"\n✅ Batch {batch_id} completed: {successful_count}/{len(configs)} successful ({batch_time:.2f}s)")
 
         return batch_results
-
     def _update_stats(self, result: TestResultData):
         """Update statistics with thread safety"""
         with self.results_lock:
@@ -1655,7 +1660,7 @@ def main():
     parser.add_argument('--vmess', '-vm', help='VMess JSON config file')
     parser.add_argument('--vless', '-vl', help='VLESS JSON config file')
     parser.add_argument('--workers', '-w', type=int, default=1000, help='Number of concurrent workers')
-    parser.add_argument('--timeout', '-t', type=int, default=60, help='Connection timeout in seconds')
+    parser.add_argument('--timeout', '-t', type=int, default=8, help='Connection timeout in seconds')
     parser.add_argument('--batch-size', '-b', type=int, default=1000, help='Batch size for processing')
     parser.add_argument('--xray-path', '-x', help='Path to Xray executable')
     parser.add_argument('--no-incremental', action='store_true', help='Disable incremental saving')
