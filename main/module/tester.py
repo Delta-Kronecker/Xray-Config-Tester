@@ -54,22 +54,22 @@ except ImportError:
 
 
 def setup_logging():
-    """Setup simple logging with clean output"""
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    
+    file_formatter = logging.Formatter('[%(asctime)s] %(levelname)-8s %(message)s')
+    console_formatter = logging.Formatter('%(levelname)-8s %(message)s')
+
     file_handler = logging.FileHandler('../log/proxy_tester.log', encoding='utf-8')
-    file_handler.setFormatter(formatter)
+    file_handler.setFormatter(file_formatter)
     file_handler.setLevel(logging.DEBUG)
-    
+
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(message)s'))
+    console_handler.setFormatter(console_formatter)
     console_handler.setLevel(logging.INFO)
-    
+
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-    
+
     return logger
 
 
@@ -80,6 +80,7 @@ if sys.platform.startswith('win'):
         pass
 
 logger = setup_logging()
+
 _unsupported_methods = set()
 
 
@@ -109,8 +110,6 @@ class ProxyConfig:
     server: str
     port: int
     remarks: str = ""
-    
-    # Protocol-specific fields
     method: str = ""
     password: str = ""
     uuid: str = ""
@@ -118,8 +117,6 @@ class ProxyConfig:
     cipher: str = "auto"
     flow: str = ""
     encryption: str = "none"
-    
-    # Transport settings
     network: str = "tcp"
     tls: str = ""
     sni: str = ""
@@ -129,7 +126,6 @@ class ProxyConfig:
     fingerprint: str = ""
     headerType: str = ""
     serviceName: str = ""
-    
     raw_config: Dict[str, Any] = field(default_factory=dict)
     config_id: Optional[int] = None
     line_number: Optional[int] = None
@@ -139,20 +135,18 @@ class ProxyConfig:
             raise ValueError(f"Invalid proxy configuration: {self}")
 
     def is_valid(self) -> bool:
-        """Validate proxy configuration"""
         if not (1 <= self.port <= 65535):
             return False
-        
         if not self._is_valid_address(self.server):
             return False
-        
+
         if self.protocol == ProxyProtocol.SHADOWSOCKS:
             return self._validate_shadowsocks()
         elif self.protocol == ProxyProtocol.VMESS:
             return self._validate_vmess()
         elif self.protocol == ProxyProtocol.VLESS:
             return self._validate_vless()
-        
+
         return False
 
     def _validate_shadowsocks(self) -> bool:
@@ -164,12 +158,15 @@ class ProxyConfig:
             '2022-blake3-aes-128-gcm', '2022-blake3-aes-256-gcm',
             '2022-blake3-chacha20-poly1305'
         }
-        
+
         if self.method.lower() not in valid_methods:
             _unsupported_methods.add(self.method)
-            logger.debug(f"Potentially unsupported method: {self.method}")
-        
-        return bool(self.password and len(self.password) >= 1)
+            logger.debug("Unsupported method: %s", self.method)
+
+        if not self.password or len(self.password) < 1:
+            return False
+
+        return True
 
     def _validate_vmess(self) -> bool:
         if not self.uuid:
@@ -178,7 +175,9 @@ class ProxyConfig:
             uuid.UUID(self.uuid)
         except ValueError:
             return False
-        return self.alterId >= 0
+        if self.alterId < 0:
+            return False
+        return True
 
     def _validate_vless(self) -> bool:
         if not self.uuid:
@@ -190,26 +189,20 @@ class ProxyConfig:
         return True
 
     def _is_valid_address(self, address: str) -> bool:
-        """Validate IP address or domain name"""
         clean_address = address.strip('[]')
-        
         try:
             ipaddress.ip_address(clean_address)
             return True
         except ValueError:
             if len(clean_address) > 253 or not clean_address:
                 return False
-            
             if clean_address.startswith('.') or clean_address.endswith('.'):
                 return False
-            
             if '..' in clean_address:
                 return False
-            
             labels = clean_address.split('.')
             if len(labels) < 2:
                 return False
-            
             for label in labels:
                 if not label or len(label) > 63:
                     return False
@@ -217,11 +210,9 @@ class ProxyConfig:
                     return False
                 if not all(c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-" for c in label):
                     return False
-            
             return True
 
     def get_hash(self) -> str:
-        """Generate unique hash for configuration"""
         if self.protocol == ProxyProtocol.SHADOWSOCKS:
             config_str = f"ss://{self.server}:{self.port}:{self.method}:{self.password}"
         elif self.protocol == ProxyProtocol.VMESS:
@@ -230,7 +221,6 @@ class ProxyConfig:
             config_str = f"vless://{self.server}:{self.port}:{self.uuid}:{self.network}"
         else:
             config_str = f"{self.protocol.value}://{self.server}:{self.port}"
-        
         return hashlib.md5(config_str.encode()).hexdigest()
 
 
@@ -256,8 +246,6 @@ class TestResultData:
 
 
 class ProcessManager:
-    """Process management with cleanup"""
-    
     def __init__(self):
         self.active_processes: Dict[int, subprocess.Popen] = {}
         self.lock = threading.Lock()
@@ -287,11 +275,7 @@ class ProcessManager:
         while self.running:
             time.sleep(2)
             with self.lock:
-                dead_pids = []
-                for pid, process in list(self.active_processes.items()):
-                    if process.poll() is not None:
-                        dead_pids.append(pid)
-                
+                dead_pids = [pid for pid, proc in self.active_processes.items() if proc.poll() is not None]
                 for pid in dead_pids:
                     self.active_processes.pop(pid, None)
 
@@ -313,14 +297,12 @@ class ProcessManager:
                     return
                 except subprocess.TimeoutExpired:
                     pass
-                
                 process.kill()
                 process.wait(timeout=0.3)
-                
                 if sys.platform.startswith('win'):
                     try:
                         subprocess.run(['taskkill', '/F', '/T', '/PID', str(process.pid)],
-                                     capture_output=True, timeout=3, encoding='utf-8', errors='ignore')
+                                       capture_output=True, timeout=3, encoding='utf-8', errors='ignore')
                     except:
                         pass
         except:
@@ -328,8 +310,6 @@ class ProcessManager:
 
 
 class FastPortManager:
-    """Port management with pre-validated pool"""
-    
     def __init__(self, start_port: int = 10000, end_port: int = 20000):
         self.start_port = start_port
         self.end_port = end_port
@@ -339,19 +319,16 @@ class FastPortManager:
         self._initialize_port_pool()
 
     def _initialize_port_pool(self):
-        logger.info(f"Initializing port pool ({self.start_port}-{self.end_port})")
-        
+        logger.info("Port pool ready (%d-%d)", self.start_port, self.end_port)
         chunk_size = 100
         available_count = 0
-        
         for start in range(self.start_port, self.end_port + 1, chunk_size):
             end = min(start + chunk_size, self.end_port + 1)
             for port in range(start, end):
                 if self._is_port_available_fast(port):
                     self.available_ports.put(port)
                     available_count += 1
-        
-        logger.info(f"Port pool initialized with {available_count} available ports")
+        logger.info("Port pool initialized (%d ports)", available_count)
 
     def _is_port_available_fast(self, port: int) -> bool:
         try:
@@ -375,7 +352,6 @@ class FastPortManager:
     def _find_emergency_port(self) -> Optional[int]:
         sample_size = min(100, self.end_port - self.start_port + 1)
         port_sample = random.sample(range(self.start_port, self.end_port + 1), sample_size)
-        
         with self.lock:
             for port in port_sample:
                 if port not in self.used_ports and self._is_port_available_fast(port):
@@ -386,73 +362,48 @@ class FastPortManager:
     def release_port(self, port: int):
         with self.lock:
             self.used_ports.discard(port)
-        
-        def return_port():
-            time.sleep(0.02)
-            try:
-                self.available_ports.put(port)
-            except:
-                pass
-        
-        threading.Timer(0.02, return_port).start()
+        threading.Timer(0.02, lambda: self.available_ports.put(port)).start()
 
 
 class FastNetworkTester:
-    """Network testing with connection pooling"""
-    
     def __init__(self, timeout: int = 8):
         self.timeout = timeout
         self.session = None
         if HAS_REQUESTS:
             self.session = requests.Session()
             self.session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             })
-            adapter = requests.adapters.HTTPAdapter(
-                pool_connections=20,
-                pool_maxsize=100,
-                max_retries=0
-            )
+            adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=100, max_retries=0)
             self.session.mount('http://', adapter)
             self.session.mount('https://', adapter)
-        
+
         self.test_urls = [
-            'http://httpbin.org/ip',
-            'http://icanhazip.com',
-            'http://ifconfig.me/ip',
-            'http://api.ipify.org',
-            'http://ipinfo.io/ip',
-            'http://checkip.amazonaws.com',
-            'https://httpbin.org/ip',
-            'https://icanhazip.com',
-            'https://ifconfig.me/ip',
+            'http://httpbin.org/ip', 'http://icanhazip.com', 'http://ifconfig.me/ip',
+            'http://api.ipify.org', 'http://ipinfo.io/ip', 'http://checkip.amazonaws.com',
+            'https://httpbin.org/ip', 'https://icanhazip.com', 'https://ifconfig.me/ip',
             'https://api.ipify.org'
         ]
 
     def test_proxy_connection(self, proxy_port: int) -> Tuple[bool, Optional[str], float]:
-        start_time = time.time()
-        
+        start = time.time()
         if not self._is_proxy_responsive(proxy_port):
-            return False, None, time.time() - start_time
-        
-        test_url_count = min(8, len(self.test_urls))
-        for test_url in random.sample(self.test_urls, test_url_count):
+            return False, None, time.time() - start
+        for url in random.sample(self.test_urls, min(8, len(self.test_urls))):
             try:
-                success, ip, response_time = self._single_test(proxy_port, test_url)
-                if success:
-                    return True, ip, response_time
+                ok, ip, rt = self._single_test(proxy_port, url)
+                if ok:
+                    return True, ip, rt
             except Exception as e:
-                logger.debug(f"Test with {test_url} failed: {e}")
+                logger.debug("Test failed for %s: %s", url, e)
                 continue
-        
-        return False, None, time.time() - start_time
+        return False, None, time.time() - start
 
     def _is_proxy_responsive(self, port: int) -> bool:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(2.0)
-                result = s.connect_ex(('127.0.0.1', port))
-                return result == 0
+                return s.connect_ex(('127.0.0.1', port)) == 0
         except:
             return False
 
@@ -461,50 +412,29 @@ class FastNetworkTester:
             'http': f'socks5://127.0.0.1:{proxy_port}',
             'https': f'socks5://127.0.0.1:{proxy_port}'
         }
-        
-        start_time = time.time()
-        
+        start = time.time()
         try:
             if self.session:
-                response = self.session.get(
-                    test_url,
-                    proxies=proxies,
-                    timeout=self.timeout,
-                    verify=False
-                )
-                response_time = time.time() - start_time
-                
-                if response.status_code == 200:
-                    ip_text = response.text.strip()
-                    
-                    if 'application/json' in response.headers.get('content-type', ''):
+                resp = self.session.get(test_url, proxies=proxies, timeout=self.timeout, verify=False)
+                rt = time.time() - start
+                if resp.status_code == 200:
+                    ip = resp.text.strip()
+                    if 'application/json' in resp.headers.get('content-type', ''):
                         try:
-                            data = response.json()
-                            ip_text = data.get('origin', data.get('ip', ip_text))
+                            data = resp.json()
+                            ip = data.get('origin', data.get('ip', ip))
                         except:
                             pass
-                    
-                    try:
-                        if '.' in ip_text and len(ip_text.split('.')) == 4:
-                            return True, ip_text, response_time
-                        elif ':' in ip_text:
-                            return True, ip_text, response_time
-                    except:
-                        pass
-                    
-                    return False, None, response_time
-            
-            return False, None, time.time() - start_time
-        
+                    if '.' in ip or ':' in ip:
+                        return True, ip, rt
+            return False, None, time.time() - start
         except requests.exceptions.RequestException:
-            return False, None, time.time() - start_time
+            return False, None, time.time() - start
         except Exception:
-            return False, None, time.time() - start_time
+            return False, None, time.time() - start
 
 
-class HangDetector:
-    """Hang detection with cleanup callbacks"""
-    
+class OptimizedHangDetector:
     def __init__(self, max_hang_time: float = 12.0):
         self.max_hang_time = max_hang_time
         self.active_operations = {}
@@ -536,82 +466,69 @@ class HangDetector:
 
     def _monitor_hangs(self):
         while self.running:
-            current_time = time.time()
-            hanging_ops = []
-            
+            current = time.time()
+            hanging = []
             with self.lock:
-                for op_id, start_time in list(self.active_operations.items()):
-                    if current_time - start_time > self.max_hang_time:
-                        hanging_ops.append(op_id)
-            
-            for op_id in hanging_ops:
-                callback = self.hang_callbacks.get(op_id)
-                if callback:
+                for oid, ts in list(self.active_operations.items()):
+                    if current - ts > self.max_hang_time:
+                        hanging.append(oid)
+            for oid in hanging:
+                cb = self.hang_callbacks.get(oid)
+                if cb:
                     try:
-                        callback()
+                        cb()
                     except:
                         pass
-                self.unregister_operation(op_id)
-            
-            if hanging_ops:
-                logger.debug(f"Cleaned up {len(hanging_ops)} hanging operations")
-            
+                self.unregister_operation(oid)
+            if hanging:
+                logger.warning("Cleaned %d hanging operations", len(hanging))
             time.sleep(2)
 
 
-class ProxyTester:
-    """Main proxy testing class"""
-    
+class EnhancedProxyTester:
     def __init__(self,
                  xray_path: Optional[str] = None,
-                 max_workers: int = 50,
+                 max_workers: int = 1000,
                  timeout: int = 8,
                  port_range: Tuple[int, int] = (10000, 20000),
-                 batch_size: int = 100,
-                 incremental_save: bool = True):
-        
+                 batch_size: int = 1000,
+                 incremental_save: bool = True,
+                 incremental_files: Dict[str, str] = None):
+
         self.xray_path = xray_path or self._find_xray_executable()
         self.max_workers = max_workers
         self.timeout = timeout
         self.batch_size = batch_size
         self.incremental_save = incremental_save
-        
-        # Output files
-        self.incremental_files = {
+        self.incremental_files = incremental_files or {
             'shadowsocks': '../data/working_json/working_shadowsocks.txt',
             'vmess': '../data/working_json/working_vmess.txt',
             'vless': '../data/working_json/working_vless.txt'
         }
-        
         self.url_files = {
             'shadowsocks': '../data/working_url/working_shadowsocks_urls.txt',
             'vmess': '../data/working_url/working_vmess_urls.txt',
             'vless': '../data/working_url/working_vless_urls.txt'
         }
-        
-        # File handles
         self.output_file_handles = {}
         self.url_file_handles = {}
-        
-        # Managers
+
         self.port_manager = FastPortManager(port_range[0], port_range[1])
         self.process_manager = ProcessManager()
-        self.hang_detector = HangDetector(max_hang_time=12.0)
+        self.hang_detector = OptimizedHangDetector(max_hang_time=12.0)
         self.network_tester = FastNetworkTester(timeout)
-        
+
         if not HAS_SOCKS:
-            logger.warning("Warning: PySocks library not found. Install with: pip install PySocks")
-        
+            logger.warning("PySocks not found – SOCKS5 support limited")
+
         self._validate_xray()
-        
-        # Results storage
+
         self.results: List[TestResultData] = []
         self.results_lock = threading.Lock()
-        
+
         if self.incremental_save:
             self._setup_incremental_save()
-        
-        # Statistics
+
         self.stats = {
             'total': 0, 'success': 0, 'failed': 0, 'parse_errors': 0,
             'syntax_errors': 0, 'connection_errors': 0, 'timeouts': 0,
@@ -620,13 +537,10 @@ class ProxyTester:
             'vmess': {'total': 0, 'success': 0, 'failed': 0},
             'vless': {'total': 0, 'success': 0, 'failed': 0}
         }
-        
-        print(f"\nProxy Tester initialized:")
-        print(f"  Workers: {max_workers}")
-        print(f"  Timeout: {timeout}s")
-        print(f"  Batch size: {batch_size}")
+
+        logger.info("Tester ready | workers=%d batch=%d", max_workers, batch_size)
         if self.incremental_save:
-            print(f"  Incremental save: enabled")
+            logger.info("Incremental save active")
 
     def __del__(self):
         try:
@@ -636,144 +550,85 @@ class ProxyTester:
 
     def _setup_incremental_save(self):
         try:
-            # JSON format files
             for protocol, filename in self.incremental_files.items():
                 f = open(filename, 'w', encoding='utf-8')
-                f.write(f"# Working {protocol.upper()} Configurations (JSON Format)\n")
-                f.write(f"# Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"# Format: Each line contains one working configuration in JSON\n\n")
+                f.write(f"# Working {protocol.upper()} (JSON)\n")
                 f.flush()
                 self.output_file_handles[protocol] = f
-            
-            # URL format files
+
             for protocol, filename in self.url_files.items():
                 f = open(filename, 'w', encoding='utf-8')
-                f.write(f"# Working {protocol.upper()} Configurations (URL Format)\n")
-                f.write(f"# Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"# Format: Each line contains one working configuration as URL\n\n")
+                f.write(f"# Working {protocol.upper()} (URL)\n")
                 f.flush()
                 self.url_file_handles[protocol] = f
-            
-            logger.info("Incremental save files initialized")
+
+            logger.info("Incremental save files ready")
         except Exception as e:
-            logger.error(f"Failed to setup incremental save files: {e}")
+            logger.error("Failed to setup incremental save: %s", e)
             self.incremental_save = False
 
-    def _save_config_immediately(self, result: 'TestResultData'):
+    def _save_config_immediately(self, result: TestResultData):
         if not self.incremental_save or result.result != TestResult.SUCCESS:
             return
-        
         try:
             protocol = result.config.protocol.value
-            timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-            
-            # Save JSON format
-            if protocol in self.output_file_handles:
-                file_handle = self.output_file_handles[protocol]
-                config_line = self._create_working_config_line(result)
-                
-                file_handle.write(f"# Tested at: {timestamp} | Response: {result.response_time:.3f}s | IP: {result.external_ip}\n")
-                file_handle.write(f"{config_line}\n\n")
-                file_handle.flush()
-            
-            # Save URL format
-            if protocol in self.url_file_handles:
-                url_handle = self.url_file_handles[protocol]
-                config_url = self._create_config_url(result)
-                
-                url_handle.write(f"# Tested at: {timestamp} | Response: {result.response_time:.3f}s | IP: {result.external_ip}\n")
-                url_handle.write(f"{config_url}\n\n")
-                url_handle.flush()
-        
-        except Exception as e:
-            logger.error(f"Failed to save config immediately: {e}")
+            config_line = self._create_working_config_line(result)
+            config_url = self._create_config_url(result)
 
-    def _create_working_config_line(self, result: 'TestResultData') -> str:
+            if protocol in self.output_file_handles:
+                f = self.output_file_handles[protocol]
+                f.write(f"# {result.response_time:.3f}s {result.external_ip}\n{config_line}\n\n")
+                f.flush()
+
+            if protocol in self.url_file_handles:
+                u = self.url_file_handles[protocol]
+                u.write(f"# {result.response_time:.3f}s {result.external_ip}\n{config_url}\n\n")
+                u.flush()
+        except Exception as e:
+            logger.error("Immediate save failed: %s", e)
+
+    def _create_working_config_line(self, result: TestResultData) -> str:
         config = result.config
-        
         if config.protocol == ProxyProtocol.SHADOWSOCKS:
             return json.dumps({
-                'protocol': 'shadowsocks',
-                'server': config.server,
-                'port': config.port,
-                'method': config.method,
-                'password': config.password,
-                'network': config.network or 'tcp',
-                'tls': config.tls,
-                'remarks': config.remarks,
-                'test_time': result.response_time,
+                'protocol': 'shadowsocks', 'server': config.server, 'port': config.port,
+                'method': config.method, 'password': config.password, 'network': config.network or 'tcp',
+                'tls': config.tls, 'remarks': config.remarks, 'test_time': result.response_time,
                 'external_ip': result.external_ip
             }, ensure_ascii=False, separators=(',', ':'))
-        
         elif config.protocol == ProxyProtocol.VMESS:
             return json.dumps({
-                'protocol': 'vmess',
-                'server': config.server,
-                'port': config.port,
-                'uuid': config.uuid,
-                'alterId': config.alterId,
-                'cipher': config.cipher,
-                'network': config.network or 'tcp',
-                'path': config.path,
-                'host': config.host,
-                'tls': config.tls,
-                'sni': config.sni,
-                'remarks': config.remarks,
-                'test_time': result.response_time,
-                'external_ip': result.external_ip
+                'protocol': 'vmess', 'server': config.server, 'port': config.port, 'uuid': config.uuid,
+                'alterId': config.alterId, 'cipher': config.cipher, 'network': config.network or 'tcp',
+                'path': config.path, 'host': config.host, 'tls': config.tls, 'sni': config.sni,
+                'remarks': config.remarks, 'test_time': result.response_time, 'external_ip': result.external_ip
             }, ensure_ascii=False, separators=(',', ':'))
-        
         elif config.protocol == ProxyProtocol.VLESS:
             return json.dumps({
-                'protocol': 'vless',
-                'server': config.server,
-                'port': config.port,
-                'uuid': config.uuid,
-                'flow': config.flow,
-                'encryption': config.encryption,
-                'network': config.network or 'tcp',
-                'path': config.path,
-                'host': config.host,
-                'tls': config.tls,
-                'sni': config.sni,
-                'remarks': config.remarks,
-                'test_time': result.response_time,
-                'external_ip': result.external_ip
+                'protocol': 'vless', 'server': config.server, 'port': config.port, 'uuid': config.uuid,
+                'flow': config.flow, 'encryption': config.encryption, 'network': config.network or 'tcp',
+                'path': config.path, 'host': config.host, 'tls': config.tls, 'sni': config.sni,
+                'remarks': config.remarks, 'test_time': result.response_time, 'external_ip': result.external_ip
             }, ensure_ascii=False, separators=(',', ':'))
-        
         return json.dumps(config.raw_config, ensure_ascii=False, separators=(',', ':'))
 
-    def _create_config_url(self, result: 'TestResultData') -> str:
+    def _create_config_url(self, result: TestResultData) -> str:
         config = result.config
-        
         try:
             if config.protocol == ProxyProtocol.SHADOWSOCKS:
                 auth = f"{config.method}:{config.password}"
                 auth_b64 = base64.b64encode(auth.encode()).decode()
                 remarks = quote(config.remarks or f"SS-{config.server}")
                 return f"ss://{auth_b64}@{config.server}:{config.port}#{remarks}"
-            
             elif config.protocol == ProxyProtocol.VMESS:
                 vmess_config = {
-                    "v": "2",
-                    "ps": config.remarks or f"VMess-{config.server}",
-                    "add": config.server,
-                    "port": str(config.port),
-                    "id": config.uuid,
-                    "aid": str(config.alterId),
-                    "scy": config.cipher,
-                    "net": config.network or "tcp",
-                    "type": config.headerType or "none",
-                    "host": config.host or "",
-                    "path": config.path or "",
-                    "tls": config.tls or "",
-                    "sni": config.sni or "",
-                    "alpn": config.alpn or ""
+                    "v": "2", "ps": config.remarks or f"VMess-{config.server}", "add": config.server,
+                    "port": str(config.port), "id": config.uuid, "aid": str(config.alterId),
+                    "scy": config.cipher, "net": config.network or "tcp", "type": config.headerType or "none",
+                    "host": config.host or "", "path": config.path or "", "tls": config.tls or "",
+                    "sni": config.sni or "", "alpn": config.alpn or ""
                 }
-                vmess_json = json.dumps(vmess_config, separators=(',', ':'))
-                vmess_b64 = base64.b64encode(vmess_json.encode()).decode()
-                return f"vmess://{vmess_b64}"
-            
+                return f"vmess://{base64.b64encode(json.dumps(vmess_config, separators=(',', ':')).encode()).decode()}"
             elif config.protocol == ProxyProtocol.VLESS:
                 params = []
                 if config.encryption and config.encryption != "none":
@@ -796,46 +651,35 @@ class ProxyTester:
                     params.append(f"serviceName={quote(config.serviceName)}")
                 if config.fingerprint:
                     params.append(f"fp={quote(config.fingerprint)}")
-                
                 param_str = "&".join(params)
                 query = f"?{param_str}" if param_str else ""
                 remarks = quote(config.remarks or f"VLESS-{config.server}")
                 return f"vless://{config.uuid}@{config.server}:{config.port}{query}#{remarks}"
-        
         except Exception as e:
-            logger.debug(f"Error creating URL for {config.protocol.value}: {e}")
-        
+            logger.debug("URL create error for %s: %s", config.protocol.value, e)
         return f"{config.protocol.value}://{config.server}:{config.port}"
 
     def _find_xray_executable(self) -> str:
         xray_path = shutil.which('xray')
         if xray_path:
             return xray_path
-        
         if sys.platform.startswith('win'):
-            search_paths = [
-                'xray.exe', './xray.exe', './Xray-windows-64/xray.exe',
-                'C:\\Program Files\\Xray\\xray.exe'
-            ]
+            search_paths = ['xray.exe', './xray.exe', './Xray-windows-64/xray.exe',
+                            'C:\\Program Files\\Xray\\xray.exe']
         else:
-            search_paths = [
-                'xray', './xray', '/usr/local/bin/xray', '/usr/bin/xray'
-            ]
-        
+            search_paths = ['xray', './xray', '/usr/local/bin/xray', '/usr/bin/xray']
         for path in search_paths:
             if os.path.exists(path) and os.access(path, os.X_OK):
                 return path
-        
         return 'xray'
 
     def _validate_xray(self):
         try:
-            result = subprocess.run([self.xray_path, 'version'],
-                                  capture_output=True, text=True, timeout=3,
-                                  encoding='utf-8', errors='ignore')
+            result = subprocess.run([self.xray_path, 'version'], capture_output=True, text=True, timeout=3,
+                                    encoding='utf-8', errors='ignore')
             if result.returncode == 0:
                 version = result.stdout.strip().split()[1] if len(result.stdout.split()) > 1 else 'Unknown'
-                logger.info(f"Xray version: {version}")
+                logger.info("Xray version: %s", version)
             else:
                 logger.warning("Could not determine Xray version")
         except Exception as e:
@@ -843,374 +687,214 @@ class ProxyTester:
 
     def load_configs_from_json(self, file_path: str, protocol: ProxyProtocol) -> List[ProxyConfig]:
         if not os.path.exists(file_path):
-            logger.warning(f"Configuration file not found: {file_path}")
+            logger.warning("Config file not found: %s", file_path)
             return []
-        
         configs = []
         seen_hashes = set()
-        stats = {
-            'total_configs': 0,
-            'parsed_successfully': 0,
-            'parse_failures': 0,
-            'duplicates': 0,
-            'invalid_configs': 0
-        }
-        
-        print(f"\nLoading {protocol.value} configurations from: {file_path}")
-        
+        stats = {'total': 0, 'parsed': 0, 'failed': 0, 'dupes': 0, 'invalid': 0}
+        logger.info("Loading %s from %s", protocol.value, file_path)
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            
-            stats['total_configs'] = len(data.get('configs', []))
-            print(f"File contains {stats['total_configs']} {protocol.value} configurations")
-            
-            for config_data in data.get('configs', []):
+            stats['total'] = len(data.get('configs', []))
+            for cfg in data.get('configs', []):
                 try:
-                    config = self._create_proxy_config_from_json(config_data, protocol)
+                    config = self._create_proxy_config_from_json(cfg, protocol)
                     if config:
-                        config_hash = config.get_hash()
-                        if config_hash not in seen_hashes:
+                        h = config.get_hash()
+                        if h not in seen_hashes:
                             configs.append(config)
-                            seen_hashes.add(config_hash)
-                            stats['parsed_successfully'] += 1
+                            seen_hashes.add(h)
+                            stats['parsed'] += 1
                         else:
-                            stats['duplicates'] += 1
+                            stats['dupes'] += 1
                     else:
-                        stats['invalid_configs'] += 1
-                
+                        stats['invalid'] += 1
                 except Exception as e:
-                    stats['parse_failures'] += 1
-                    logger.debug(f"Parse failed: {e}")
-        
+                    stats['failed'] += 1
+                    logger.debug("Parse failed: %s", e)
         except Exception as e:
-            logger.error(f"Failed to load JSON file {file_path}: {e}")
+            logger.error("Failed to load %s: %s", file_path, e)
             return []
-        
-        print(f"\nParsing results:")
-        print(f"  Total configs: {stats['total_configs']}")
-        print(f"  Successfully parsed: {stats['parsed_successfully']}")
-        print(f"  Parse failures: {stats['parse_failures']}")
-        print(f"  Invalid configs: {stats['invalid_configs']}")
-        print(f"  Duplicates removed: {stats['duplicates']}")
-        print(f"  Unique configs for testing: {len(configs)}")
-        
+        logger.info("Loaded %s: total=%d parsed=%d invalid=%d dupes=%d unique=%d",
+                    protocol.value, stats['total'], stats['parsed'], stats['invalid'], stats['dupes'], len(configs))
         return configs
 
-    def _create_proxy_config_from_json(self, config_data: Dict, protocol: ProxyProtocol) -> Optional[ProxyConfig]:
+    def _create_proxy_config_from_json(self, data: Dict, protocol: ProxyProtocol) -> Optional[ProxyConfig]:
         try:
             if protocol == ProxyProtocol.SHADOWSOCKS:
-                return ProxyConfig(
-                    protocol=protocol,
-                    server=config_data.get('server', ''),
-                    port=int(config_data.get('port', 0)),
-                    method=config_data.get('method', ''),
-                    password=config_data.get('password', ''),
-                    remarks=config_data.get('remarks', ''),
-                    network=config_data.get('network', 'tcp'),
-                    tls=config_data.get('tls', ''),
-                    raw_config=config_data
-                )
-            
+                return ProxyConfig(protocol=protocol, server=data.get('server', ''), port=int(data.get('port', 0)),
+                                   method=data.get('method', ''), password=data.get('password', ''),
+                                   remarks=data.get('remarks', ''), network=data.get('network', 'tcp'),
+                                   tls=data.get('tls', ''), raw_config=data)
             elif protocol == ProxyProtocol.VMESS:
-                return ProxyConfig(
-                    protocol=protocol,
-                    server=config_data.get('server', ''),
-                    port=int(config_data.get('port', 0)),
-                    uuid=config_data.get('id', config_data.get('uuid', '')),
-                    alterId=int(config_data.get('alterId', 0)),
-                    cipher=config_data.get('cipher', config_data.get('scy', 'auto')),
-                    remarks=config_data.get('ps', config_data.get('remarks', '')),
-                    network=config_data.get('net', config_data.get('network', 'tcp')),
-                    tls=config_data.get('tls', ''),
-                    sni=config_data.get('sni', ''),
-                    path=config_data.get('path', ''),
-                    host=config_data.get('host', ''),
-                    alpn=config_data.get('alpn', ''),
-                    headerType=config_data.get('type', config_data.get('headerType', '')),
-                    raw_config=config_data
-                )
-            
+                return ProxyConfig(protocol=protocol, server=data.get('server', ''), port=int(data.get('port', 0)),
+                                   uuid=data.get('id', data.get('uuid', '')), alterId=int(data.get('alterId', 0)),
+                                   cipher=data.get('cipher', data.get('scy', 'auto')),
+                                   remarks=data.get('ps', data.get('remarks', '')),
+                                   network=data.get('net', data.get('network', 'tcp')), tls=data.get('tls', ''),
+                                   sni=data.get('sni', ''), path=data.get('path', ''), host=data.get('host', ''),
+                                   alpn=data.get('alpn', ''), headerType=data.get('type', data.get('headerType', '')),
+                                   raw_config=data)
             elif protocol == ProxyProtocol.VLESS:
-                return ProxyConfig(
-                    protocol=protocol,
-                    server=config_data.get('server', ''),
-                    port=int(config_data.get('port', 0)),
-                    uuid=config_data.get('id', config_data.get('uuid', '')),
-                    flow=config_data.get('flow', ''),
-                    encryption=config_data.get('encryption', 'none'),
-                    remarks=config_data.get('ps', config_data.get('remarks', '')),
-                    network=config_data.get('net', config_data.get('network', 'tcp')),
-                    tls=config_data.get('tls', config_data.get('security', '')),
-                    sni=config_data.get('sni', ''),
-                    path=config_data.get('path', ''),
-                    host=config_data.get('host', ''),
-                    alpn=config_data.get('alpn', ''),
-                    serviceName=config_data.get('serviceName', ''),
-                    fingerprint=config_data.get('fp', config_data.get('fingerprint', '')),
-                    raw_config=config_data
-                )
-        
+                return ProxyConfig(protocol=protocol, server=data.get('server', ''), port=int(data.get('port', 0)),
+                                   uuid=data.get('id', data.get('uuid', '')), flow=data.get('flow', ''),
+                                   encryption=data.get('encryption', 'none'),
+                                   remarks=data.get('ps', data.get('remarks', '')),
+                                   network=data.get('net', data.get('network', 'tcp')),
+                                   tls=data.get('tls', data.get('security', '')), sni=data.get('sni', ''),
+                                   path=data.get('path', ''), host=data.get('host', ''), alpn=data.get('alpn', ''),
+                                   serviceName=data.get('serviceName', ''),
+                                   fingerprint=data.get('fp', data.get('fingerprint', '')), raw_config=data)
         except (ValueError, TypeError) as e:
-            logger.debug(f"Invalid config data: {e}")
+            logger.debug("Invalid config data: %s", e)
             return None
-        
         return None
 
     def _generate_xray_config(self, config: ProxyConfig, listen_port: int) -> Dict:
         xray_config = {
-            "log": {
-                "loglevel": "warning",
-                "error": os.devnull
-            },
-            "inbounds": [
-                {
-                    "port": listen_port,
-                    "listen": "127.0.0.1",
-                    "protocol": "socks",
-                    "settings": {
-                        "auth": "noauth",
-                        "udp": True,
-                        "ip": "127.0.0.1"
-                    },
-                    "sniffing": {
-                        "enabled": False
-                    }
-                }
-            ],
-            "outbounds": [
-                {
-                    "protocol": config.protocol.value,
-                    "settings": {},
-                    "streamSettings": {
-                        "sockopt": {
-                            "tcpKeepAliveInterval": 30
-                        }
-                    }
-                }
-            ]
+            "log": {"loglevel": "warning", "error": os.devnull},
+            "inbounds": [{
+                "port": listen_port, "listen": "127.0.0.1", "protocol": "socks",
+                "settings": {"auth": "noauth", "udp": True, "ip": "127.0.0.1"},
+                "sniffing": {"enabled": False}
+            }],
+            "outbounds": [{
+                "protocol": config.protocol.value,
+                "settings": {},
+                "streamSettings": {"sockopt": {"tcpKeepAliveInterval": 30}}
+            }]
         }
-        
-        # Protocol-specific settings
+
         if config.protocol == ProxyProtocol.SHADOWSOCKS:
             xray_config["outbounds"][0]["settings"] = {
-                "servers": [
-                    {
-                        "address": config.server,
-                        "port": config.port,
-                        "method": config.method,
-                        "password": config.password,
-                        "level": 0
-                    }
-                ]
+                "servers": [{"address": config.server, "port": config.port, "method": config.method,
+                             "password": config.password, "level": 0}]
             }
-        
         elif config.protocol == ProxyProtocol.VMESS:
             xray_config["outbounds"][0]["settings"] = {
-                "vnext": [
-                    {
-                        "address": config.server,
-                        "port": config.port,
-                        "users": [
-                            {
-                                "id": config.uuid,
-                                "alterId": config.alterId,
-                                "security": config.cipher,
-                                "level": 0
-                            }
-                        ]
-                    }
-                ]
+                "vnext": [{"address": config.server, "port": config.port,
+                           "users": [{"id": config.uuid, "alterId": config.alterId,
+                                      "security": config.cipher, "level": 0}]}]
             }
-        
         elif config.protocol == ProxyProtocol.VLESS:
             xray_config["outbounds"][0]["settings"] = {
-                "vnext": [
-                    {
-                        "address": config.server,
-                        "port": config.port,
-                        "users": [
-                            {
-                                "id": config.uuid,
-                                "flow": config.flow,
-                                "encryption": config.encryption,
-                                "level": 0
-                            }
-                        ]
-                    }
-                ]
+                "vnext": [{"address": config.server, "port": config.port,
+                           "users": [{"id": config.uuid, "flow": config.flow,
+                                      "encryption": config.encryption, "level": 0}]}]
             }
-        
-        # Stream settings
-        stream_settings = xray_config["outbounds"][0]["streamSettings"]
-        
+
+        ss = xray_config["outbounds"][0]["streamSettings"]
         if config.network and config.network != "tcp":
-            stream_settings["network"] = config.network
-            
+            ss["network"] = config.network
             if config.network == "ws":
-                ws_settings = {}
+                ws = {}
                 if config.path:
-                    ws_settings["path"] = config.path
+                    ws["path"] = config.path
                 if config.host:
-                    ws_settings["headers"] = {"Host": config.host}
-                stream_settings["wsSettings"] = ws_settings
-            
+                    ws["headers"] = {"Host": config.host}
+                ss["wsSettings"] = ws
             elif config.network == "h2":
-                h2_settings = {}
+                h2 = {}
                 if config.path:
-                    h2_settings["path"] = config.path
+                    h2["path"] = config.path
                 if config.host:
-                    h2_settings["host"] = [config.host]
-                stream_settings["httpSettings"] = h2_settings
-            
+                    h2["host"] = [config.host]
+                ss["httpSettings"] = h2
             elif config.network == "grpc":
-                grpc_settings = {}
+                grpc = {}
                 if config.serviceName:
-                    grpc_settings["serviceName"] = config.serviceName
-                stream_settings["grpcSettings"] = grpc_settings
-        
-        # TLS settings
+                    grpc["serviceName"] = config.serviceName
+                ss["grpcSettings"] = grpc
+
         if config.tls:
-            stream_settings["security"] = config.tls
-            tls_settings = {}
-            
+            ss["security"] = config.tls
+            tls = {}
             if config.sni:
-                tls_settings["serverName"] = config.sni
+                tls["serverName"] = config.sni
             elif config.host:
-                tls_settings["serverName"] = config.host
-            
+                tls["serverName"] = config.host
             if config.alpn:
-                tls_settings["alpn"] = config.alpn.split(",") if isinstance(config.alpn, str) else config.alpn
-            
+                tls["alpn"] = config.alpn.split(",") if isinstance(config.alpn, str) else config.alpn
             if config.fingerprint:
-                tls_settings["fingerprint"] = config.fingerprint
-            
-            tls_settings["allowInsecure"] = True
-            
+                tls["fingerprint"] = config.fingerprint
+            tls["allowInsecure"] = True
             if config.tls == "tls":
-                stream_settings["tlsSettings"] = tls_settings
+                ss["tlsSettings"] = tls
             elif config.tls == "reality":
-                stream_settings["realitySettings"] = tls_settings
-        
+                ss["realitySettings"] = tls
+
         return xray_config
 
     def _test_single_config(self, config: ProxyConfig, batch_id: int = 0) -> TestResultData:
-        test_start = time.time()
+        start = time.time()
         proxy_port = None
         process = None
         config_file = None
-        operation_id = f"test_{config.get_hash()}_{int(time.time())}"
-        
+        op_id = f"test_{config.get_hash()}_{int(time.time())}"
+
         try:
-            self.hang_detector.register_operation(operation_id)
-            
+            self.hang_detector.register_operation(op_id)
+
             proxy_port = self.port_manager.get_available_port()
             if not proxy_port:
-                return TestResultData(
-                    config=config,
-                    result=TestResult.PORT_CONFLICT,
-                    test_time=time.time() - test_start,
-                    batch_id=batch_id
-                )
-            
+                return TestResultData(config=config, result=TestResult.PORT_CONFLICT,
+                                      test_time=time.time() - start, batch_id=batch_id)
+
             xray_config = self._generate_xray_config(config, proxy_port)
-            
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                 json.dump(xray_config, f, indent=2)
                 config_file = f.name
-            
-            # Test config syntax
+
             try:
-                syntax_test = subprocess.run(
+                syntax = subprocess.run(
                     [self.xray_path, 'run', '-test', '-config', config_file],
-                    capture_output=True,
-                    timeout=1.0,
-                    text=True,
-                    encoding='utf-8',
-                    errors='ignore'
+                    capture_output=True, timeout=1.0, text=True, encoding='utf-8', errors='ignore'
                 )
-                if syntax_test.returncode != 0:
-                    return TestResultData(
-                        config=config,
-                        result=TestResult.SYNTAX_ERROR,
-                        test_time=time.time() - test_start,
-                        error_message=syntax_test.stderr[:200],
-                        batch_id=batch_id
-                    )
+                if syntax.returncode != 0:
+                    return TestResultData(config=config, result=TestResult.SYNTAX_ERROR,
+                                          test_time=time.time() - start,
+                                          error_message=syntax.stderr[:200], batch_id=batch_id)
             except subprocess.TimeoutExpired:
-                return TestResultData(
-                    config=config,
-                    result=TestResult.SYNTAX_ERROR,
-                    test_time=time.time() - test_start,
-                    error_message="Syntax test timeout",
-                    batch_id=batch_id
-                )
-            
-            # Start Xray process
+                return TestResultData(config=config, result=TestResult.SYNTAX_ERROR,
+                                      test_time=time.time() - start,
+                                      error_message="Syntax test timeout", batch_id=batch_id)
+
             with open(os.devnull, 'w') as devnull:
                 process = subprocess.Popen(
                     [self.xray_path, 'run', '-config', config_file],
-                    stdout=devnull,
-                    stderr=devnull,
-                    text=True,
-                    encoding='utf-8',
-                    errors='ignore'
+                    stdout=devnull, stderr=devnull, text=True, encoding='utf-8', errors='ignore'
                 )
-            
             self.process_manager.register_process(process)
             time.sleep(0.5)
-            
             if process.poll() is not None:
-                return TestResultData(
-                    config=config,
-                    result=TestResult.CONNECTION_ERROR,
-                    test_time=time.time() - test_start,
-                    error_message="Xray process terminated",
-                    batch_id=batch_id
-                )
-            
-            # Test connection
-            success, external_ip, response_time = self.network_tester.test_proxy_connection(proxy_port)
-            
-            if success:
-                result = TestResultData(
-                    config=config,
-                    result=TestResult.SUCCESS,
-                    test_time=time.time() - test_start,
-                    response_time=response_time,
-                    external_ip=external_ip,
-                    proxy_port=proxy_port,
-                    batch_id=batch_id
-                )
-                print(f"SUCCESS: {config.protocol.value}://{config.server}:{config.port} ({response_time:.3f}s)")
-                self._save_config_immediately(result)
-                return result
+                return TestResultData(config=config, result=TestResult.CONNECTION_ERROR,
+                                      test_time=time.time() - start,
+                                      error_message="Xray terminated", batch_id=batch_id)
+
+            ok, ip, rt = self.network_tester.test_proxy_connection(proxy_port)
+            if ok:
+                res = TestResultData(config=config, result=TestResult.SUCCESS,
+                                     test_time=time.time() - start,
+                                     response_time=rt, external_ip=ip, proxy_port=proxy_port,
+                                     batch_id=batch_id)
+                logger.info("SUCCESS %s:%d %.3fs", config.server, config.port, rt)
+                self._save_config_immediately(res)
+                return res
             else:
-                return TestResultData(
-                    config=config,
-                    result=TestResult.NETWORK_ERROR,
-                    test_time=time.time() - test_start,
-                    error_message="Network test failed",
-                    proxy_port=proxy_port,
-                    batch_id=batch_id
-                )
-        
+                return TestResultData(config=config, result=TestResult.NETWORK_ERROR,
+                                      test_time=time.time() - start,
+                                      error_message="Network test failed",
+                                      proxy_port=proxy_port, batch_id=batch_id)
+
         except subprocess.TimeoutExpired:
-            return TestResultData(
-                config=config,
-                result=TestResult.TIMEOUT,
-                test_time=time.time() - test_start,
-                batch_id=batch_id
-            )
+            return TestResultData(config=config, result=TestResult.TIMEOUT,
+                                  test_time=time.time() - start, batch_id=batch_id)
         except Exception as e:
-            logger.debug(f"Test error for {config.server}:{config.port}: {e}")
-            return TestResultData(
-                config=config,
-                result=TestResult.NETWORK_ERROR,
-                test_time=time.time() - test_start,
-                error_message=str(e),
-                batch_id=batch_id
-            )
+            logger.debug("Test error %s:%d – %s", config.server, config.port, e)
+            return TestResultData(config=config, result=TestResult.NETWORK_ERROR,
+                                  test_time=time.time() - start,
+                                  error_message=str(e), batch_id=batch_id)
         finally:
             if process:
                 try:
@@ -1223,27 +907,19 @@ class ProxyTester:
                     self.process_manager.unregister_process(process)
                 except:
                     pass
-            
             if config_file and os.path.exists(config_file):
                 try:
                     os.unlink(config_file)
                 except:
                     pass
-            
             if proxy_port:
                 self.port_manager.release_port(proxy_port)
-            
-            self.hang_detector.unregister_operation(operation_id)
+            self.hang_detector.unregister_operation(op_id)
 
     def _close_incremental_files(self):
-        for handle in self.output_file_handles.values():
+        for h in list(self.output_file_handles.values()) + list(self.url_file_handles.values()):
             try:
-                handle.close()
-            except:
-                pass
-        for handle in self.url_file_handles.values():
-            try:
-                handle.close()
+                h.close()
             except:
                 pass
         self.output_file_handles.clear()
@@ -1252,281 +928,154 @@ class ProxyTester:
     def test_configs(self, configs: List[ProxyConfig], batch_id: int = 0) -> List[TestResultData]:
         if not configs:
             return []
-        
-        batch_results = []
-        batch_start = time.time()
-        tested_count = 0
-        successful_count = 0
-        completed_futures = set()
-        
-        print(f"\nTesting batch {batch_id} with {len(configs)} configurations")
-        
-        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as executor:
-            future_to_config = {}
-            config_to_future = {}
-            
-            for config in configs:
-                try:
-                    config_hash = config.get_hash()
-                    if config_hash in config_to_future:
-                        continue
-                    
-                    future = executor.submit(self._test_single_config, config, batch_id)
-                    future_to_config[future] = config
-                    config_to_future[config_hash] = future
-                except Exception as e:
-                    logger.debug(f"Failed to submit task for {config.server}:{config.port}: {e}")
-                    error_result = TestResultData(
-                        config=config,
-                        result=TestResult.NETWORK_ERROR,
-                        test_time=time.time() - batch_start,
-                        error_message=f"Submit failed: {e}",
-                        batch_id=batch_id
-                    )
-                    batch_results.append(error_result)
-                    self._update_stats(error_result)
-            
+        results = []
+        start = time.time()
+        logger.info("Batch %d – %d configs", batch_id, len(configs))
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as exe:
+            future_to_config = {exe.submit(self._test_single_config, cfg, batch_id): cfg for cfg in configs}
             if HAS_TQDM:
-                progress_bar = tqdm(total=len(future_to_config), desc=f"Batch {batch_id}", unit="config", ncols=80)
+                pbar = tqdm(total=len(future_to_config), desc=f"Batch {batch_id}", unit="cfg", ncols=80)
             else:
-                print(f"Progress: 0/{len(future_to_config)}")
-            
+                logger.info("Progress: 0/%d", len(future_to_config))
             try:
-                dynamic_timeout = min(self.timeout + 5, self.timeout * 1.5)
-                
-                for future in as_completed(future_to_config, timeout=dynamic_timeout):
-                    if future in completed_futures:
-                        continue
-                    
-                    completed_futures.add(future)
-                    config = future_to_config[future]
-                    tested_count += 1
-                    
+                for fut in as_completed(future_to_config, timeout=min(self.timeout + 5, self.timeout * 1.5)):
+                    cfg = future_to_config[fut]
                     try:
-                        result = future.result(timeout=1.0)
-                        batch_results.append(result)
-                        self._update_stats(result)
-                        
-                        if result.result == TestResult.SUCCESS:
-                            successful_count += 1
-                            self._save_config_immediately(result)
-                        
+                        res = fut.result(timeout=1.0)
+                        results.append(res)
+                        self._update_stats(res)
+                        if res.result == TestResult.SUCCESS:
+                            self._save_config_immediately(res)
                         if HAS_TQDM:
-                            progress_bar.update(1)
-                            progress_bar.set_postfix({
-                                'success': successful_count,
-                                'tested': tested_count
-                            })
-                    
+                            pbar.update(1)
+                            pbar.set_postfix({'ok': self.stats['success'], 'done': len(results)})
                     except TimeoutError:
-                        logger.debug(f"Timeout getting result for {config.server}:{config.port}")
-                        error_result = TestResultData(
-                            config=config,
-                            result=TestResult.TIMEOUT,
-                            test_time=time.time() - batch_start,
-                            batch_id=batch_id
-                        )
-                        batch_results.append(error_result)
-                        self._update_stats(error_result)
-                    
-                    except Exception as e:
-                        logger.debug(f"Error getting result for {config.server}:{config.port}: {e}")
-                        error_result = TestResultData(
-                            config=config,
-                            result=TestResult.NETWORK_ERROR,
-                            test_time=time.time() - batch_start,
-                            error_message=str(e),
-                            batch_id=batch_id
-                        )
-                        batch_results.append(error_result)
-                        self._update_stats(error_result)
-            
+                        results.append(TestResultData(config=cfg, result=TestResult.TIMEOUT,
+                                                      test_time=time.time() - start,
+                                                      error_message="Batch timeout", batch_id=batch_id))
+                        self._update_stats(results[-1])
             except TimeoutError:
-                logger.warning(f"Batch {batch_id}: Timeout reached, cancelling remaining futures")
-                
-                cancelled_count = 0
-                for future, config in future_to_config.items():
-                    if not future.done() and future not in completed_futures:
-                        future.cancel()
-                        cancelled_count += 1
-                        error_result = TestResultData(
-                            config=config,
-                            result=TestResult.TIMEOUT,
-                            test_time=time.time() - batch_start,
-                            error_message="Batch timeout",
-                            batch_id=batch_id
-                        )
-                        batch_results.append(error_result)
-                        self._update_stats(error_result)
-                
-                print(f"Cancelled {cancelled_count} pending futures")
-            
+                logger.warning("Batch %d – global timeout, cancelling", batch_id)
+                for fut, cfg in future_to_config.items():
+                    if not fut.done():
+                        fut.cancel()
+                        results.append(TestResultData(config=cfg, result=TestResult.TIMEOUT,
+                                                      test_time=time.time() - start,
+                                                      error_message="Batch timeout", batch_id=batch_id))
+                        self._update_stats(results[-1])
             finally:
-                try:
-                    executor.shutdown(wait=False, cancel_futures=True)
-                except:
-                    pass
-                
                 if HAS_TQDM:
-                    progress_bar.close()
-        
-        batch_time = time.time() - batch_start
-        print(f"Batch {batch_id} completed: {successful_count}/{len(configs)} successful ({batch_time:.2f}s)")
-        
-        return batch_results
+                    pbar.close()
+        logger.info("Batch %d – %d/%d ok (%.1fs)",
+                    batch_id, sum(1 for r in results if r.result == TestResult.SUCCESS),
+                    len(configs), time.time() - start)
+        return results
 
     def _update_stats(self, result: TestResultData):
         with self.results_lock:
             self.stats['total'] += 1
-            protocol = result.config.protocol.value
-            
-            if protocol in self.stats:
-                self.stats[protocol]['total'] += 1
+            proto = result.config.protocol.value
+            if proto in self.stats:
+                self.stats[proto]['total'] += 1
                 if result.result == TestResult.SUCCESS:
-                    self.stats[protocol]['success'] += 1
+                    self.stats[proto]['success'] += 1
+                    self.stats['success'] += 1
                 else:
-                    self.stats[protocol]['failed'] += 1
-            
-            if result.result == TestResult.SUCCESS:
-                self.stats['success'] += 1
-            else:
-                self.stats['failed'] += 1
-                
-                if result.result == TestResult.PARSE_ERROR:
-                    self.stats['parse_errors'] += 1
-                elif result.result == TestResult.SYNTAX_ERROR:
-                    self.stats['syntax_errors'] += 1
-                elif result.result == TestResult.CONNECTION_ERROR:
-                    self.stats['connection_errors'] += 1
-                elif result.result == TestResult.TIMEOUT:
-                    self.stats['timeouts'] += 1
-                elif result.result == TestResult.HANG_TIMEOUT:
-                    self.stats['hang_timeouts'] += 1
-                elif result.result == TestResult.PROCESS_KILLED:
-                    self.stats['process_killed'] += 1
+                    self.stats[proto]['failed'] += 1
+                    self.stats['failed'] += 1
+                    if result.result == TestResult.PARSE_ERROR:
+                        self.stats['parse_errors'] += 1
+                    elif result.result == TestResult.SYNTAX_ERROR:
+                        self.stats['syntax_errors'] += 1
+                    elif result.result == TestResult.CONNECTION_ERROR:
+                        self.stats['connection_errors'] += 1
+                    elif result.result == TestResult.TIMEOUT:
+                        self.stats['timeouts'] += 1
+                    elif result.result == TestResult.HANG_TIMEOUT:
+                        self.stats['hang_timeouts'] += 1
+                    elif result.result == TestResult.PROCESS_KILLED:
+                        self.stats['process_killed'] += 1
 
     def run_tests(self, configs: List[ProxyConfig]) -> List[TestResultData]:
         if not configs:
-            logger.warning("No configurations to test")
+            logger.warning("No configs to test")
             return []
-        
-        def signal_handler(signum, frame):
-            print(f"\nReceived signal {signum}, shutting down gracefully...")
-            self.cleanup()
-            sys.exit(0)
-        
-        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGINT, lambda s, f: (logger.info("Interrupted – shutting down"), self.cleanup(), sys.exit(0)))
         if hasattr(signal, 'SIGTERM'):
-            signal.signal(signal.SIGTERM, signal_handler)
-        
+            signal.signal(signal.SIGTERM, lambda s, f: (logger.info("Terminated – shutting down"), self.cleanup(), sys.exit(0)))
+
         self.process_manager.start_monitoring()
         self.hang_detector.start_monitoring()
-        
+
         all_results = []
-        total_configs = len(configs)
-        
-        print(f"\nStarting proxy testing")
-        print(f"Total configurations: {total_configs}")
-        print(f"Workers: {self.max_workers}, Timeout: {self.timeout}s, Batch size: {self.batch_size}")
-        
+        total = len(configs)
+        logger.info("Testing %d configs | workers=%d timeout=%ds batch=%d",
+                    total, self.max_workers, self.timeout, self.batch_size)
         try:
-            for batch_idx, i in enumerate(range(0, total_configs, self.batch_size)):
+            for idx, i in enumerate(range(0, total, self.batch_size)):
                 batch = configs[i:i + self.batch_size]
-                batch_id = batch_idx + 1
-                
-                print(f"\nProcessing batch {batch_id} ({len(batch)} configs)")
-                
+                batch_id = idx + 1
+                logger.info("Batch %d – %d configs", batch_id, len(batch))
                 try:
-                    batch_results = self.test_configs(batch, batch_id)
-                    all_results.extend(batch_results)
-                    
+                    res = self.test_configs(batch, batch_id)
+                    all_results.extend(res)
                     self._save_results(all_results)
-                    self._print_batch_summary(batch_results, batch_id)
-                    
-                    if batch_idx < (total_configs // self.batch_size):
+                    if idx < (total // self.batch_size):
                         time.sleep(0.5)
-                
                 except KeyboardInterrupt:
-                    print(f"\nBatch {batch_id} interrupted by user")
+                    logger.info("Batch %d interrupted", batch_id)
                     break
                 except Exception as e:
-                    logger.error(f"Batch {batch_id} failed: {e}")
+                    logger.error("Batch %d failed: %s", batch_id, e)
                     continue
-        
         except KeyboardInterrupt:
-            print("\nTesting interrupted by user")
+            logger.info("Testing interrupted")
         finally:
             self.process_manager.stop_monitoring()
             self.hang_detector.stop_monitoring()
-        
         if all_results:
             self._print_final_summary(all_results)
-        
         return all_results
 
-    def _print_batch_summary(self, results: List[TestResultData], batch_id: int):
-        success_count = sum(1 for r in results if r.result == TestResult.SUCCESS)
-        total_count = len(results)
-        
-        print(f"Batch {batch_id} Summary: {success_count}/{total_count} successful ({success_count / total_count * 100:.1f}%)")
-
     def _print_final_summary(self, results: List[TestResultData]):
-        success_count = sum(1 for r in results if r.result == TestResult.SUCCESS)
-        total_count = len(results)
-        
-        print("\n" + "=" * 50)
-        print("TESTING SUMMARY")
-        print("=" * 50)
-        print(f"Total configurations tested: {total_count}")
-        print(f"Successful connections: {success_count}")
-        print(f"Failed connections: {total_count - success_count}")
-        print(f"Success rate: {success_count / total_count * 100:.2f}%")
-        
-        print("\nProtocol Breakdown:")
-        for protocol in ['shadowsocks', 'vmess', 'vless']:
-            if self.stats[protocol]['total'] > 0:
-                success_pct = (self.stats[protocol]['success'] / self.stats[protocol]['total'] * 100) if self.stats[protocol]['total'] > 0 else 0
-                print(f"  {protocol.upper()}: {self.stats[protocol]['success']}/{self.stats[protocol]['total']} ({success_pct:.1f}%)")
-        
-        if total_count - success_count > 0:
-            print("\nError Breakdown:")
-            error_stats = {
-                'Connection Errors': self.stats['connection_errors'],
-                'Timeouts': self.stats['timeouts'],
-                'Parse Errors': self.stats['parse_errors'],
-                'Syntax Errors': self.stats['syntax_errors'],
-                'Hang Timeouts': self.stats['hang_timeouts'],
-                'Process Killed': self.stats['process_killed']
-            }
-            
-            for error_type, count in error_stats.items():
-                if count > 0:
-                    pct = count / total_count * 100
-                    print(f"  {error_type}: {count} ({pct:.1f}%)")
-        
-        success_times = [r.response_time for r in results if r.result == TestResult.SUCCESS and r.response_time]
-        if success_times:
-            avg_time = sum(success_times) / len(success_times)
-            min_time = min(success_times)
-            max_time = max(success_times)
-            print(f"\nResponse Times (successful only):")
-            print(f"  Average: {avg_time:.3f}s")
-            print(f"  Minimum: {min_time:.3f}s")
-            print(f"  Maximum: {max_time:.3f}s")
-        
+        ok = sum(1 for r in results if r.result == TestResult.SUCCESS)
+        total = len(results)
+        logger.info("=" * 60)
+        logger.info("FINAL SUMMARY")
+        logger.info("=" * 60)
+        logger.info("Total tested: %d", total)
+        logger.info("Successful  : %d", ok)
+        logger.info("Failed      : %d", total - ok)
+        logger.info("Success rate: %.2f%%", ok / total * 100)
+        for proto in ['shadowsocks', 'vmess', 'vless']:
+            if self.stats[proto]['total']:
+                logger.info("%-12s: %d/%d (%.1f%%)", proto.upper(),
+                            self.stats[proto]['success'], self.stats[proto]['total'],
+                            self.stats[proto]['success'] / self.stats[proto]['total'] * 100)
+        if total - ok > 0:
+            logger.info("Error breakdown:")
+            for err, cnt in [('Connection', self.stats['connection_errors']),
+                             ('Timeout', self.stats['timeouts']),
+                             ('Parse', self.stats['parse_errors']),
+                             ('Syntax', self.stats['syntax_errors']),
+                             ('Hang', self.stats['hang_timeouts']),
+                             ('Killed', self.stats['process_killed'])]:
+                if cnt:
+                    logger.info("  %-18s: %d (%.1f%%)", err, cnt, cnt / total * 100)
+        times = [r.response_time for r in results if r.result == TestResult.SUCCESS and r.response_time]
+        if times:
+            logger.info("Response times (success only): avg=%.3fs min=%.3fs max=%.3fs",
+                        sum(times) / len(times), min(times), max(times))
         if _unsupported_methods:
-            print(f"\nUnsupported methods detected: {', '.join(_unsupported_methods)}")
-            print("These methods may not work with this Xray version")
-        
-        print("=" * 50)
+            logger.info("Unsupported methods: %s", ", ".join(_unsupported_methods))
+        logger.info("=" * 60)
 
     def _save_results(self, results: List[TestResultData]):
         try:
-            results_data = [r.to_dict() for r in results]
             with open('../log/test_results.json', 'w', encoding='utf-8') as f:
-                json.dump(results_data, f, indent=2, ensure_ascii=False)
+                json.dump([r.to_dict() for r in results], f, indent=2, ensure_ascii=False)
         except Exception as e:
-            logger.error(f"Failed to save results: {e}")
+            logger.error("Save results failed: %s", e)
 
     def cleanup(self):
         try:
@@ -1540,46 +1089,39 @@ class ProxyTester:
 
 def main():
     import argparse
-    
-    parser = argparse.ArgumentParser(description='Enhanced Proxy Configuration Tester')
-    parser.add_argument('--shadowsocks', '-ss', help='Shadowsocks JSON config file')
-    parser.add_argument('--vmess', '-vm', help='VMess JSON config file')
-    parser.add_argument('--vless', '-vl', help='VLESS JSON config file')
-    parser.add_argument('--workers', '-w', type=int, default=50, help='Number of concurrent workers')
-    parser.add_argument('--timeout', '-t', type=int, default=8, help='Connection timeout in seconds')
-    parser.add_argument('--batch-size', '-b', type=int, default=100, help='Batch size for processing')
-    parser.add_argument('--xray-path', '-x', help='Path to Xray executable')
-    parser.add_argument('--no-incremental', action='store_true', help='Disable incremental saving')
-    
+    parser = argparse.ArgumentParser(description="Proxy Configuration Tester")
+    parser.add_argument('--shadowsocks', '-ss', help="Shadowsocks JSON file")
+    parser.add_argument('--vmess', '-vm', help="VMess JSON file")
+    parser.add_argument('--vless', '-vl', help="VLESS JSON file")
+    parser.add_argument('--workers', '-w', type=int, default=1000, help="Concurrent workers")
+    parser.add_argument('--timeout', '-t', type=int, default=8, help="Timeout (seconds)")
+    parser.add_argument('--batch-size', '-b', type=int, default=1000, help="Batch size")
+    parser.add_argument('--xray-path', '-x', help="Path to Xray executable")
+    parser.add_argument('--no-incremental', action='store_true', help="Disable incremental save")
     args = parser.parse_args()
-    
+
     if not any([args.shadowsocks, args.vmess, args.vless]):
-        default_files = {
+        defaults = {
             'shadowsocks': '../data/raw/shadowsocks_configs.json',
             'vmess': '../data/raw/vmess_configs.json',
             'vless': '../data/raw/vless_configs.json'
         }
-        
-        existing_defaults = []
-        for protocol, filename in default_files.items():
-            if os.path.exists(filename):
-                existing_defaults.append((protocol, filename))
-        
-        if existing_defaults:
-            print("No config files specified, using available default files:")
-            for protocol, filename in existing_defaults:
-                print(f"  Found: {filename}")
-                if protocol == 'shadowsocks':
-                    args.shadowsocks = filename
-                elif protocol == 'vmess':
-                    args.vmess = filename
-                elif protocol == 'vless':
-                    args.vless = filename
-        else:
-            parser.error("At least one config file (--shadowsocks, --vmess, or --vless) is required")
-    
+        found = []
+        for proto, fn in defaults.items():
+            if os.path.exists(fn):
+                found.append((proto, fn))
+        if not found:
+            parser.error("Provide at least one config file or place defaults in ../data/raw/")
+        for proto, fn in found:
+            if proto == 'shadowsocks':
+                args.shadowsocks = fn
+            elif proto == 'vmess':
+                args.vmess = fn
+            elif proto == 'vless':
+                args.vless = fn
+
     try:
-        tester = ProxyTester(
+        tester = EnhancedProxyTester(
             xray_path=args.xray_path,
             max_workers=args.workers,
             timeout=args.timeout,
@@ -1587,48 +1129,39 @@ def main():
             incremental_save=not args.no_incremental
         )
     except Exception as e:
-        logger.error(f"Failed to initialize tester: {e}")
+        logger.error("Init failed: %s", e)
         return
-    
+
     all_configs = []
-    
     if args.shadowsocks:
-        ss_configs = tester.load_configs_from_json(args.shadowsocks, ProxyProtocol.SHADOWSOCKS)
-        all_configs.extend(ss_configs)
-    
+        all_configs.extend(tester.load_configs_from_json(args.shadowsocks, ProxyProtocol.SHADOWSOCKS))
     if args.vmess:
-        vm_configs = tester.load_configs_from_json(args.vmess, ProxyProtocol.VMESS)
-        all_configs.extend(vm_configs)
-    
+        all_configs.extend(tester.load_configs_from_json(args.vmess, ProxyProtocol.VMESS))
     if args.vless:
-        vl_configs = tester.load_configs_from_json(args.vless, ProxyProtocol.VLESS)
-        all_configs.extend(vl_configs)
-    
+        all_configs.extend(tester.load_configs_from_json(args.vless, ProxyProtocol.VLESS))
+
     if not all_configs:
-        logger.error("No valid configurations found to test")
+        logger.error("No valid configs to test")
         return
-    
-    print(f"\nTotal unique configurations for testing: {len(all_configs)}")
-    
+
+    logger.info("Total unique configs: %d", len(all_configs))
     try:
         results = tester.run_tests(all_configs)
-        print(f"\nTesting completed. Results saved to test_results.json")
-        
-        working_configs = [r for r in results if r.result == TestResult.SUCCESS]
-        if working_configs:
-            print(f"\nWorking configurations saved to:")
-            for protocol in ['shadowsocks', 'vmess', 'vless']:
-                if tester.incremental_files.get(protocol):
-                    print(f"  JSON: {tester.incremental_files[protocol]}")
-                if tester.url_files.get(protocol):
-                    print(f"  URL: {tester.url_files[protocol]}")
+        logger.info("Testing complete – results saved to test_results.json")
+        ok = [r for r in results if r.result == TestResult.SUCCESS]
+        if ok:
+            logger.info("Working configs saved to:")
+            for proto in ['shadowsocks', 'vmess', 'vless']:
+                if tester.incremental_files.get(proto):
+                    logger.info("  JSON: %s", tester.incremental_files[proto])
+                if tester.url_files.get(proto):
+                    logger.info("  URL : %s", tester.url_files[proto])
         else:
-            print("No working configurations found")
-    
+            logger.info("No working configs found")
     except KeyboardInterrupt:
-        print("\nTesting interrupted by user")
+        logger.info("Interrupted by user")
     except Exception as e:
-        logger.error(f"Testing failed: {e}")
+        logger.error("Testing failed: %s", e)
     finally:
         tester.cleanup()
 
