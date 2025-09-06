@@ -39,7 +39,7 @@ jobs:
     - name: Run the tests
       run: |
         cd main/module
-        python tester.py --shadowsocks ../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        python tester.py --xray-path /usr/local/bin/xray
 
     - name: Configure git for push
       run: |
