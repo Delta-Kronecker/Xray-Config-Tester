@@ -241,44 +241,44 @@ jobs:
         
         mkdir -p reports
         
-        cat > reports/test_summary.md << EOF
+        CURRENT_DATE=$(date +'%Y-%m-%d %H:%M:%S UTC')
+        LAST_RUN=$(date)
+        
+        cat > reports/test_summary.md << 'EOF'
 # Proxy Test Results
-**Date**: $(date +'%Y-%m-%d %H:%M:%S UTC')
+**Date**: ${CURRENT_DATE}
 
 ## Working Configurations
-- Shadowsocks: $WORKING_SS
-- VLESS: $WORKING_VLESS  
-- VMess: $WORKING_VMESS
+- Shadowsocks: ${WORKING_SS}
+- VLESS: ${WORKING_VLESS}
+- VMess: ${WORKING_VMESS}
 
-## Total Working: $TOTAL_WORKING
+## Total Working: ${TOTAL_WORKING}
 
 ## Test Details
-- Last run: $(date)
-- Workflow: ${{ github.workflow }}
+- Last run: ${LAST_RUN}
+- Workflow: Run Proxy Tests and Upload Results
 - Run ID: ${{ github.run_id }}
 - Commit: ${{ github.sha }}
 
 ## File Structure
-\`\`\`
-$(find data/ -type f 2>/dev/null | head -20)
-\`\`\`
+```
+$(find data/ -type f 2>/dev/null | head -10)
+```
 
 ## Log Summary
-\`\`\`
-$(tail -10 log/proxy_tester.log 2>/dev/null | grep -E "(SUCCESS|FINAL|Total|Working|Failed)" || echo "No relevant logs found")
-\`\`\`
-
-## Raw File Contents Sample
-### Shadowsocks Sample:
-\`\`\`
-$(head -3 data/working_json/working_shadowsocks.txt 2>/dev/null || echo "No shadowsocks results")
-\`\`\`
-
-### VLESS Sample:
-\`\`\`
-$(head -3 data/working_json/working_vless.txt 2>/dev/null || echo "No vless results")
-\`\`\`
+```
+$(tail -5 log/proxy_tester.log 2>/dev/null | grep -E "(SUCCESS|FINAL|Total|Working)" || echo "No relevant logs found")
+```
 EOF
+        
+        # جایگزینی متغیرها در فایل
+        sed -i "s/\${CURRENT_DATE}/$CURRENT_DATE/g" reports/test_summary.md
+        sed -i "s/\${LAST_RUN}/$LAST_RUN/g" reports/test_summary.md
+        sed -i "s/\${WORKING_SS}/$WORKING_SS/g" reports/test_summary.md
+        sed -i "s/\${WORKING_VLESS}/$WORKING_VLESS/g" reports/test_summary.md
+        sed -i "s/\${WORKING_VMESS}/$WORKING_VMESS/g" reports/test_summary.md
+        sed -i "s/\${TOTAL_WORKING}/$TOTAL_WORKING/g" reports/test_summary.md
         
         echo "Test report generated with $TOTAL_WORKING working configs"
 
