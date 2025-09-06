@@ -2,8 +2,8 @@ name: Run Proxy Tests and Upload Results
 
 on:
   schedule:
-    - cron: '0 */3 * * *' 
-  workflow_dispatch:  
+    - cron: '0 */6 * * *'  # هر ۶ ساعت یکبار
+  workflow_dispatch:  # امکان اجرای دستی
 
 jobs:
   test-proxies:
@@ -27,8 +27,16 @@ jobs:
 
     - name: Download Xray-core for Linux
       run: |
+        # دانلود آخرین نسخه Xray-core برای لینوکس
         wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        unzip xray.zip
+        
+        # حذف فایل‌های قبلی اگر وجود دارند
+        rm -f xray LICENSE geoip.dat geosite.dat README.md
+        
+        # extract با overwrite خودکار
+        unzip -o xray.zip
+        
+        # قابل اجرا کردن و نصب
         chmod +x xray
         sudo mv xray /usr/local/bin/
 
@@ -39,7 +47,7 @@ jobs:
     - name: Run the tests
       run: |
         cd main/module
-        python tester.py --xray-path /usr/local/bin/xray
+        python tester.py --shadowsocks ../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
 
     - name: Configure git for push
       run: |
@@ -51,4 +59,9 @@ jobs:
         cd main
         git add data/working_json/* data/working_url/* log/*
         git commit -m "Auto-update test results - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
+        
+        # ابتدا تغییرات را از remote دریافت کنید
+        git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash
+        
+        # سپس تغییرات را push کنید
         git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main
