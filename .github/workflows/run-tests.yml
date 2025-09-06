@@ -54,7 +54,7 @@ jobs:
       run: |
         cd main
         echo "Generated config files:"
-        ls -la data/raw/
+        ls -la v2ray_config_collector/data/unique/protocols/
         echo "Content of data/raw directory:"
         find data/raw/ -name "*.json" -exec echo "{}: " \; -exec head -2 {} \;
 
@@ -62,13 +62,13 @@ jobs:
       run: |
         cd main/module
         # تست تمام فایل‌های پیکربندی موجود
-        if [ -f "../../data/raw/shadowsocks_configs.json" ]; then
+        if [ -f "../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
           python tester.py --shadowsocks ../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
         fi
-        if [ -f "../../data/raw/vmess_configs.json" ]; then
+        if [ -f "../v2ray_config_collector/data/unique/protocols/vmess_configs.json" ]; then
           python tester.py --vmess ../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray
         fi
-        if [ -f "../../data/raw/vless_configs.json" ]; then
+        if [ -f "../v2ray_config_collector/data/unique/protocols/vless_configs.json'" ]; then
           python tester.py --vless ../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
         fi
 
@@ -88,3 +88,13 @@ jobs:
         
         # سپس تغییرات را push کنید
         git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main
+
+
+
+
+
+
+
+            'shadowsocks': '../v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json',
+            'vmess': '../v2ray_config_collector/data/unique/protocols/vmess_configs.json',
+            'vless': '../v2ray_config_collector/data/unique/protocols/vless_configs.json'
