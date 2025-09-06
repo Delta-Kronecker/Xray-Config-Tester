@@ -1,42 +1,10 @@
 {
   "metadata": {
     "protocol": "tuic",
-    "generated_at": "2025-09-06T17:13:36.567837",
+    "generated_at": "2025-09-06T17:40:09.931015",
     "total_configs": 2
   },
   "configs": [
-    {
-      "type": "tuic",
-      "server": "IP_CF----@79.137.206.126",
-      "port": 443,
-      "uuid": "7f9a73a3-e455-4053-ae38-f07719753dff",
-      "password": "----Join-Telegram:",
-      "version": "5",
-      "alpn": "h3,spdy/3.1",
-      "sni": "",
-      "allowInsecure": false,
-      "congestion_control": "cubic",
-      "udp_relay_mode": "native",
-      "reduce_rtt": false,
-      "remarks": "@XrayTurbo🔥",
-      "raw_params": {
-        "congestion_control": [
-          "cubic"
-        ],
-        "udp_relay_mode": [
-          "native"
-        ],
-        "alpn": [
-          "h3,spdy/3.1"
-        ],
-        "allow_insecure": [
-          "1#🇫🇮 FI | 🔒 TUIC | @goodbyefiltering [6]"
-        ]
-      },
-      "id": 166,
-      "line_number": 166,
-      "parsed_at": "2025-09-06T17:13:35.859376"
-    },
     {
       "type": "tuic",
       "server": "IP_CF----@[2a12:5940:71f8::2]",
@@ -65,9 +33,41 @@
           "1#❔ XX | 🔒 TUIC | @goodbyefiltering [7]"
         ]
       },
-      "id": 1072,
-      "line_number": 1072,
-      "parsed_at": "2025-09-06T17:13:35.894100"
+      "id": 254,
+      "line_number": 254,
+      "parsed_at": "2025-09-06T17:40:09.230575"
+    },
+    {
+      "type": "tuic",
+      "server": "IP_CF----@79.137.206.126",
+      "port": 443,
+      "uuid": "7f9a73a3-e455-4053-ae38-f07719753dff",
+      "password": "----Join-Telegram:",
+      "version": "5",
+      "alpn": "h3,spdy/3.1",
+      "sni": "",
+      "allowInsecure": false,
+      "congestion_control": "cubic",
+      "udp_relay_mode": "native",
+      "reduce_rtt": false,
+      "remarks": "@XrayTurbo🔥",
+      "raw_params": {
+        "congestion_control": [
+          "cubic"
+        ],
+        "udp_relay_mode": [
+          "native"
+        ],
+        "alpn": [
+          "h3,spdy/3.1"
+        ],
+        "allow_insecure": [
+          "1#🇫🇮 FI | 🔒 TUIC | @goodbyefiltering [6]"
+        ]
+      },
+      "id": 896,
+      "line_number": 896,
+      "parsed_at": "2025-09-06T17:40:09.254664"
     }
   ]
 }
