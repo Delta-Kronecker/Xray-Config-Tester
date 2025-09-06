@@ -37,9 +37,11 @@ except ImportError:
 
 try:
     import requests
+
     # Try to import PySocks for SOCKS5 support
     try:
         import socks
+
         HAS_SOCKS = True
     except ImportError:
         HAS_SOCKS = False
@@ -1343,133 +1345,136 @@ class EnhancedProxyTester:
         self.url_file_handles.clear()
 
     def test_configs(self, configs: List[ProxyConfig], batch_id: int = 0) -> List[TestResultData]:
-    """Test multiple configurations with optimized execution"""
-    if not configs:
-        return []
+        """Test multiple configurations with optimized execution"""
+        if not configs:
+            return []
 
-    batch_results = []
-    batch_start = time.time()
-    tested_count = 0
-    successful_count = 0
-    completed_futures = set()  # ✅ برای ردیابی futureهای تکمیل شده
+        batch_results = []
+        batch_start = time.time()
+        tested_count = 0
+        successful_count = 0
+        completed_futures = set()  # ✅ برای ردیابی futureهای تکمیل شده
 
-    logger.info(f"\n🧪 Testing batch {batch_id} with {len(configs)} configurations...")
+        logger.info(f"\n🧪 Testing batch {batch_id} with {len(configs)} configurations...")
 
-    # استفاده از ThreadPoolExecutor با timeout بهینه
-    with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as executor:
-        future_to_config = {}
-        config_to_future = {}  # ✅ نگاشت معکوس برای جلوگیری از دوباره کاری
-        
-        # ارسال تمام تسک‌ها
-        for config in configs:
-            try:
-                future = executor.submit(self._test_single_config, config, batch_id)
-                future_to_config[future] = config
-                config_to_future[config.get_hash()] = future  # ✅ استفاده از hash برای ردیابی
-            except Exception as e:
-                logger.debug(f"Failed to submit task for {config.server}:{config.port}: {e}")
-                error_result = TestResultData(
-                    config=config,
-                    result=TestResult.NETWORK_ERROR,
-                    test_time=time.time() - batch_start,
-                    error_message=f"Submit failed: {e}",
-                    batch_id=batch_id
-                )
-                batch_results.append(error_result)
-                self._update_stats(error_result)
+        # استفاده از ThreadPoolExecutor با timeout بهینه
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(configs))) as executor:
+            future_to_config = {}
+            config_to_future = {}  # ✅ نگاشت معکوس برای جلوگیری از دوباره کاری
 
-        if HAS_TQDM:
-            progress_bar = tqdm(total=len(configs), desc=f"Batch {batch_id}", unit="config", ncols=80)
-        else:
-            logger.info(f"Progress: 0/{len(configs)}")
-
-        try:
-            # استفاده از timeout پویا
-            dynamic_timeout = min(self.timeout + 5, self.timeout * 1.5)
-            
-            for future in as_completed(future_to_config, timeout=dynamic_timeout):
-                if future in completed_futures:  # ✅ جلوگیری از پردازش تکراری
-                    continue
-                    
-                completed_futures.add(future)  # ✅ علامتگذاری به عنوان تکمیل شده
-                
-                config = future_to_config[future]
-                tested_count += 1
-
+            # ارسال تمام تسک‌ها
+            for config in configs:
                 try:
-                    result = future.result(timeout=1.0)
-                    batch_results.append(result)
-                    self._update_stats(result)
-
-                    if result.result == TestResult.SUCCESS:
-                        successful_count += 1
-                        self._save_config_immediately(result)
-
-                    if HAS_TQDM:
-                        progress_bar.update(1)
-                        progress_bar.set_postfix({
-                            'success': successful_count,
-                            'tested': tested_count
-                        })
-
-                except TimeoutError:
-                    logger.debug(f"Timeout getting result for {config.server}:{config.port}")
-                    error_result = TestResultData(
-                        config=config,
-                        result=TestResult.TIMEOUT,
-                        test_time=time.time() - batch_start,
-                        batch_id=batch_id
-                    )
-                    batch_results.append(error_result)
-                    self._update_stats(error_result)
-
+                    future = executor.submit(self._test_single_config, config, batch_id)
+                    future_to_config[future] = config
+                    config_to_future[config.get_hash()] = future  # ✅ استفاده از hash برای ردیابی
                 except Exception as e:
-                    logger.debug(f"Error getting result for {config.server}:{config.port}: {e}")
+                    logger.debug(f"Failed to submit task for {config.server}:{config.port}: {e}")
                     error_result = TestResultData(
                         config=config,
                         result=TestResult.NETWORK_ERROR,
                         test_time=time.time() - batch_start,
-                        error_message=str(e),
+                        error_message=f"Submit failed: {e}",
                         batch_id=batch_id
                     )
                     batch_results.append(error_result)
                     self._update_stats(error_result)
-
-        except TimeoutError:
-            logger.warning(f"\n⏰ Batch {batch_id}: Timeout reached, cancelling remaining futures")
-            
-            # Cancel فقط futureهای تکمیل نشده
-            cancelled_count = 0
-            for future, config in future_to_config.items():
-                if not future.done() and future not in completed_futures:
-                    future.cancel()
-                    cancelled_count += 1
-                    error_result = TestResultData(
-                        config=config,
-                        result=TestResult.TIMEOUT,
-                        test_time=time.time() - batch_start,
-                        error_message="Batch timeout",
-                        batch_id=batch_id
-                    )
-                    batch_results.append(error_result)
-                    self._update_stats(error_result)
-
-            logger.info(f"Cancelled {cancelled_count} pending futures")
-
-        finally:
-            # shutdown سریع‌تر
-            try:
-                executor.shutdown(wait=False, cancel_futures=True)
-            except:
-                pass
 
             if HAS_TQDM:
-                progress_bar.close()
+                progress_bar = tqdm(total=len(configs), desc=f"Batch {batch_id}", unit="config", ncols=80)
+            else:
+                logger.info(f"Progress: 0/{len(configs)}")
 
-    batch_time = time.time() - batch_start
-    logger.info(f"\n✅ Batch {batch_id} completed: {successful_count}/{len(configs)} successful ({batch_time:.2f}s)")
+            try:
+                # استفاده از timeout پویا
+                dynamic_timeout = min(self.timeout + 5, self.timeout * 1.5)
 
-    return batch_results
+                for future in as_completed(future_to_config, timeout=dynamic_timeout):
+                    if future in completed_futures:  # ✅ جلوگیری از پردازش تکراری
+                        continue
+
+                    completed_futures.add(future)  # ✅ علامتگذاری به عنوان تکمیل شده
+
+                    config = future_to_config[future]
+                    tested_count += 1
+
+                    try:
+                        result = future.result(timeout=1.0)
+                        batch_results.append(result)
+                        self._update_stats(result)
+
+                        if result.result == TestResult.SUCCESS:
+                            successful_count += 1
+                            self._save_config_immediately(result)
+
+                        if HAS_TQDM:
+                            progress_bar.update(1)
+                            progress_bar.set_postfix({
+                                'success': successful_count,
+                                'tested': tested_count
+                            })
+
+                    except TimeoutError:
+                        logger.debug(f"Timeout getting result for {config.server}:{config.port}")
+                        error_result = TestResultData(
+                            config=config,
+                            result=TestResult.TIMEOUT,
+                            test_time=time.time() - batch_start,
+                            batch_id=batch_id
+                        )
+                        batch_results.append(error_result)
+                        self._update_stats(error_result)
+
+                    except Exception as e:
+                        logger.debug(f"Error getting result for {config.server}:{config.port}: {e}")
+                        error_result = TestResultData(
+                            config=config,
+                            result=TestResult.NETWORK_ERROR,
+                            test_time=time.time() - batch_start,
+                            error_message=str(e),
+                            batch_id=batch_id
+                        )
+                        batch_results.append(error_result)
+                        self._update_stats(error_result)
+
+            except TimeoutError:
+                logger.warning(f"\n⏰ Batch {batch_id}: Timeout reached, cancelling remaining futures")
+
+                # Cancel فقط futureهای تکمیل نشده
+                cancelled_count = 0
+                for future, config in future_to_config.items():
+                    if not future.done() and future not in completed_futures:
+                        future.cancel()
+                        cancelled_count += 1
+                        error_result = TestResultData(
+                            config=config,
+                            result=TestResult.TIMEOUT,
+                            test_time=time.time() - batch_start,
+                            error_message="Batch timeout",
+                            batch_id=batch_id
+                        )
+                        batch_results.append(error_result)
+                        self._update_stats(error_result)
+
+                logger.info(f"Cancelled {cancelled_count} pending futures")
+
+            finally:
+                # shutdown سریع‌تر
+                try:
+                    executor.shutdown(wait=False, cancel_futures=True)
+                except:
+                    pass
+
+                if HAS_TQDM:
+                    progress_bar.close()
+
+        batch_time = time.time() - batch_start
+        logger.info(f"\n✅ Batch {batch_id} completed: {successful_count}/{len(configs)} successful ({batch_time:.2f}s)")
+
+        return batch_results
+
+
+
     def _update_stats(self, result: TestResultData):
         """Update statistics with thread safety"""
         with self.results_lock:
@@ -1597,7 +1602,7 @@ class EnhancedProxyTester:
         for protocol in ['shadowsocks', 'vmess', 'vless']:
             if self.stats[protocol]['total'] > 0:
                 success_pct = (self.stats[protocol]['success'] / self.stats[protocol]['total'] * 100) if \
-                self.stats[protocol]['total'] > 0 else 0
+                    self.stats[protocol]['total'] > 0 else 0
                 logger.info(
                     f"  {protocol.upper():<12}: {self.stats[protocol]['success']:>4}/{self.stats[protocol]['total']:>4} "
                     f"({success_pct:5.1f}%)")
@@ -1698,7 +1703,8 @@ def main():
                 elif protocol == 'vless':
                     args.vless = filename
         else:
-            parser.error("At least one config file (--shadowsocks, --vmess, or --vless) is required, or place default config files (shadowsocks_configs.json, vmess_configs.json, vless_configs.json) in the current directory")
+            parser.error(
+                "At least one config file (--shadowsocks, --vmess, or --vless) is required, or place default config files (shadowsocks_configs.json, vmess_configs.json, vless_configs.json) in the current directory")
 
     # Initialize tester
     try:
