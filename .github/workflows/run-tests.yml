@@ -8,14 +8,14 @@ on:
 jobs:
   test-proxies:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # اضافه کردن timeout برای جلوگیری از اجرای بی‌پایان
+    timeout-minutes: 120
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.PAT_TOKEN }}
-        fetch-depth: 0  # دریافت تمام history برای مدیریت بهتر git
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -39,7 +39,15 @@ jobs:
     - name: Create necessary directories
       run: |
         mkdir -p data/raw data/working_json data/working_url log
+        mkdir -p main/v2ray_config_collector/data/unique/protocols
+        mkdir -p main/module/../data/working_json main/module/../data/working_url main/module/../log
         mkdir -p reports
+        
+        echo "📁 Directory structure created"
+        echo "Data directories:"
+        ls -la data/
+        echo "Main module directories:"
+        ls -la main/module/../
 
     - name: Run v2ray config collector
       run: |
@@ -52,7 +60,6 @@ jobs:
         echo "Generated config files:"
         ls -la main/v2ray_config_collector/data/unique/protocols/
         
-        # بررسی وجود فایل‌های ضروری
         if [ ! -f "main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
           echo "❌ shadowsocks config file not found!"
           exit 1
@@ -64,46 +71,103 @@ jobs:
 
     - name: Copy config files to root data directory
       run: |
-        # کپی فایل‌های پیکربندی به مسیر اصلی data/raw/
-        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json data/raw/ || echo "❌ shadowsocks config copy failed"
-        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json data/raw/ || echo "❌ vless config copy failed"
-        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json data/raw/ 2>/dev/null || echo "⚠️ vmess config not found (optional)"
+        mkdir -p data/raw data/working_json data/working_url log
         
-        echo "✅ Copied config files to data/raw/:"
+        echo "📋 Copying config files..."
+        
+        if [ -f "main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
+          cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json data/raw/
+          echo "✅ Copied shadowsocks config"
+        else
+          echo "❌ shadowsocks config not found in collector output!"
+          ls -la main/v2ray_config_collector/data/unique/protocols/ || echo "Protocols directory not found"
+        fi
+        
+        if [ -f "main/v2ray_config_collector/data/unique/protocols/vless_configs.json" ]; then
+          cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json data/raw/
+          echo "✅ Copied vless config"
+        else
+          echo "❌ vless config not found in collector output!"
+        fi
+        
+        if [ -f "main/v2ray_config_collector/data/unique/protocols/vmess_configs.json" ]; then
+          cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json data/raw/
+          echo "✅ Copied vmess config"
+        else
+          echo "⚠️ vmess config not found (optional)"
+        fi
+        
+        echo "📊 Final data directory contents:"
         ls -la data/raw/
 
     - name: Run the tests from root directory
       run: |
-        # اجرای تستر از مسیر ریشه
+        echo "📁 Current directory structure:"
+        pwd
+        ls -la
+        echo "📁 Main directory:"
+        ls -la main/
+        echo "📁 Module directory:"
+        ls -la main/module/
+        echo "📁 Data directory:"
+        ls -la data/raw/
+        
         cd main/module
         
-        # تست Shadowsocks
+        echo "🔍 Checking config file paths..."
+        if [ -f "../../../../data/raw/shadowsocks_configs.json" ]; then
+          SS_PATH="../../../../data/raw/shadowsocks_configs.json"
+        elif [ -f "../../../data/raw/shadowsocks_configs.json" ]; then
+          SS_PATH="../../../data/raw/shadowsocks_configs.json"
+        else
+          echo "❌ shadowsocks config file not found in any expected location!"
+          find ../../.. -name "shadowsocks_configs.json" -type f 2>/dev/null || echo "No shadowsocks files found"
+          exit 1
+        fi
+        
+        if [ -f "../../../../data/raw/vless_configs.json" ]; then
+          VLESS_PATH="../../../../data/raw/vless_configs.json"
+        elif [ -f "../../../data/raw/vless_configs.json" ]; then
+          VLESS_PATH="../../../data/raw/vless_configs.json"
+        else
+          echo "❌ vless config file not found in any expected location!"
+          find ../../.. -name "vless_configs.json" -type f 2>/dev/null || echo "No vless files found"
+          exit 1
+        fi
+        
+        echo "📁 Creating required directories for incremental save..."
+        mkdir -p ../../../../data/working_json ../../../../data/working_url ../../../../log
+        mkdir -p ../data/working_json ../data/working_url ../log
+        
         echo "🧪 Testing Shadowsocks configurations..."
-        python tester.py --shadowsocks ../../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+        python tester.py --shadowsocks "$SS_PATH" --xray-path /usr/local/bin/xray --workers 200 --timeout 10
         
-        # تست VLESS
         echo "🧪 Testing VLESS configurations..."
-        python tester.py --vless ../../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+        python tester.py --vless "$VLESS_PATH" --xray-path /usr/local/bin/xray --workers 200 --timeout 10
         
-        # تست VMess (اگر فایل موجود باشد)
-        if [ -f "../../../data/raw/vmess_configs.json" ]; then
+        VMESS_PATH=""
+        if [ -f "../../../../data/raw/vmess_configs.json" ]; then
+          VMESS_PATH="../../../../data/raw/vmess_configs.json"
+        elif [ -f "../../../data/raw/vmess_configs.json" ]; then
+          VMESS_PATH="../../../data/raw/vmess_configs.json"
+        fi
+        
+        if [ -n "$VMESS_PATH" ]; then
           echo "🧪 Testing VMess configurations..."
-          python tester.py --vmess ../../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+          python tester.py --vmess "$VMESS_PATH" --xray-path /usr/local/bin/xray --workers 200 --timeout 10
         else
           echo "⚠️ Skipping VMess tests - config file not found"
+          find ../../.. -name "vmess_configs.json" -type f 2>/dev/null || echo "No vmess files found"
         fi
 
     - name: Generate test report
       run: |
-        # تولید گزارش خلاصه تست
         echo "📊 Generating test report..."
         
-        # شمارش کانفیگ‌های کارآمد
-        WORKING_SS=$(grep -c '"protocol": "shadowsocks"' data/working_json/working_shadowsocks.txt 2>/dev/null || echo "0")
-        WORKING_VLESS=$(grep -c '"protocol": "vless"' data/working_json/working_vless.txt 2>/dev/null || echo "0")
-        WORKING_VMESS=$(grep -c '"protocol": "vmess"' data/working_json/working_vmess.txt 2>/dev/null || echo "0")
+        WORKING_SS=$(find data/working_json -name "*shadowsocks*" -exec grep -c '"protocol": "shadowsocks"' {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}') || WORKING_SS=0
+        WORKING_VLESS=$(find data/working_json -name "*vless*" -exec grep -c '"protocol": "vless"' {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}') || WORKING_VLESS=0
+        WORKING_VMESS=$(find data/working_json -name "*vmess*" -exec grep -c '"protocol": "vmess"' {} \; 2>/dev/null | awk '{sum+=$1} END {print sum}') || WORKING_VMESS=0
         
-        # ایجاد گزارش
         cat > reports/test_summary.md << EOF
         # Proxy Test Results
         **Date**: $(date +'%Y-%m-%d %H:%M:%S')
@@ -119,6 +183,11 @@ jobs:
         Last run: $(date)
         Workflow: ${{ github.workflow }}
         Run ID: ${{ github.run_id }}
+        
+        ### Directory Structure
+        \`\`\`
+        $(find data/ -type f -name "*.json" -o -name "*.txt" | head -20)
+        \`\`\`
         EOF
         
         echo "✅ Test report generated"
@@ -131,22 +200,18 @@ jobs:
 
     - name: Pull latest changes before push
       run: |
-        # دریافت آخرین تغییرات قبل از push
         git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash || echo "Pull failed, continuing..."
 
     - name: Commit and push results
       run: |
-        # اضافه کردن تمام فایل‌های جدید
         git add data/raw/* data/working_json/* data/working_url/* log/* reports/*
         git add main/v2ray_config_collector/data/unique/protocols/*
         
-        # بررسی تغییرات
         if git diff --staged --quiet; then
           echo "🤷‍♂️ No changes to commit"
         else
           git commit -m "Auto-update: Test results - $(date +'%Y-%m-%d %H:%M')"
           
-          # تلاش برای push با retry
           for i in {1..3}; do
             echo "🔄 Attempting push (try $i/3)..."
             git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main && break
@@ -159,12 +224,17 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
+          const workingSS = parseInt('$WORKING_SS') || 0;
+          const workingVLESS = parseInt('$WORKING_VLESS') || 0;
+          const workingVMESS = parseInt('$WORKING_VMESS') || 0;
+          const total = workingSS + workingVLESS + workingVMESS;
+          
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '✅ Proxy tests completed successfully!\n\nWorking configurations:\n- Shadowsocks: ${{ steps.test-proxies.outputs.working_ss }}\n- VLESS: ${{ steps.test-proxies.outputs.working_vless }}\n- VMess: ${{ steps.test-proxies.outputs.working_vmess }}\n\nView results in the latest commit.'
-          })
+            body: `✅ Proxy tests completed successfully!\n\nWorking configurations:\n- Shadowsocks: ${workingSS}\n- VLESS: ${workingVLESS}\n- VMess: ${workingVMESS}\n- Total: ${total}\n\nView results in the latest commit.`
+          });
 
     - name: Send notification on failure
       if: failure()
@@ -176,4 +246,4 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: '❌ Proxy tests failed! Please check the workflow logs for details.'
-          })
+          });
