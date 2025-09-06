@@ -228,33 +228,47 @@ jobs:
         echo "WORKING_VMESS=$WORKING_VMESS" >> $GITHUB_ENV
         echo "TOTAL_WORKING=$TOTAL_WORKING" >> $GITHUB_ENV
         
+        # ایجاد گزارش نهایی
+        mkdir -p reports
+        
         cat > reports/test_summary.md << EOF
-        # Proxy Test Results
-        **Date**: $(date +'%Y-%m-%d %H:%M:%S UTC')
-        
-        ## Working Configurations
-        - Shadowsocks: $WORKING_SS
-        - VLESS: $WORKING_VLESS  
-        - VMess: $WORKING_VMESS
-        
-        ## Total Working: $TOTAL_WORKING
-        
-        ## Test Details
-        - Last run: $(date)
-        - Workflow: ${{ github.workflow }}
-        - Run ID: ${{ github.run_id }}
-        - Commit: ${{ github.sha }}
-        
-        ## File Structure
-        \`\`\`
-        $(find data/ -type f 2>/dev/null | head -20)
-        \`\`\`
-        
-        ## Log Summary
-        \`\`\`
-        $(tail -20 log/proxy_tester.log 2>/dev/null || echo "No logs available")
-        \`\`\`
-        EOF
+# Proxy Test Results
+**Date**: $(date +'%Y-%m-%d %H:%M:%S UTC')
+
+## Working Configurations
+- Shadowsocks: $WORKING_SS
+- VLESS: $WORKING_VLESS  
+- VMess: $WORKING_VMESS
+
+## Total Working: $TOTAL_WORKING
+
+## Test Details
+- Last run: $(date)
+- Workflow: ${{ github.workflow }}
+- Run ID: ${{ github.run_id }}
+- Commit: ${{ github.sha }}
+
+## File Structure
+\`\`\`
+$(find data/ -type f 2>/dev/null | head -20)
+\`\`\`
+
+## Log Summary
+\`\`\`
+$(tail -10 log/proxy_tester.log 2>/dev/null | grep -E "(SUCCESS|FINAL|Total|Working|Failed)" || echo "No relevant logs found")
+\`\`\`
+
+## Raw File Contents Sample
+### Shadowsocks Sample:
+\`\`\`
+$(head -3 data/working_json/working_shadowsocks.txt 2>/dev/null || echo "No shadowsocks results")
+\`\`\`
+
+### VLESS Sample:
+\`\`\`
+$(head -3 data/working_json/working_vless.txt 2>/dev/null || echo "No vless results")
+\`\`\`
+EOF
         
         echo "✅ Test report generated with $TOTAL_WORKING working configs"
 
