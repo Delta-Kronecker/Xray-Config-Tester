@@ -42,12 +42,35 @@ jobs:
 
     - name: Create necessary directories
       run: |
-        mkdir -p main/data/working_json main/data/working_url main/log
+        mkdir -p main/data/raw main/data/working_json main/data/working_url main/log
+
+    - name: Run v2ray config collector
+      run: |
+        cd main/v2ray_config_collector
+        python main.py
+        echo "✅ Config collection completed"
+
+    - name: Check generated config files
+      run: |
+        cd main
+        echo "Generated config files:"
+        ls -la data/raw/
+        echo "Content of data/raw directory:"
+        find data/raw/ -name "*.json" -exec echo "{}: " \; -exec head -2 {} \;
 
     - name: Run the tests
       run: |
         cd main/module
-        python tester.py --shadowsocks ../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        # تست تمام فایل‌های پیکربندی موجود
+        if [ -f "../../data/raw/shadowsocks_configs.json" ]; then
+          python tester.py --shadowsocks ../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        fi
+        if [ -f "../../data/raw/vmess_configs.json" ]; then
+          python tester.py --vmess ../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray
+        fi
+        if [ -f "../../data/raw/vless_configs.json" ]; then
+          python tester.py --vless ../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
+        fi
 
     - name: Configure git for push
       run: |
@@ -57,7 +80,7 @@ jobs:
     - name: Commit and push results
       run: |
         cd main
-        git add data/working_json/* data/working_url/* log/*
+        git add data/raw/* data/working_json/* data/working_url/* log/*
         git commit -m "Auto-update test results - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         
         # ابتدا تغییرات را از remote دریافت کنید
