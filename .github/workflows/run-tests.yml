@@ -8,12 +8,14 @@ on:
 jobs:
   test-proxies:
     runs-on: ubuntu-latest
+    timeout-minutes: 120  # اضافه کردن timeout برای جلوگیری از اجرای بی‌پایان
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0  # دریافت تمام history برای مدیریت بهتر git
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -27,15 +29,17 @@ jobs:
 
     - name: Download Xray-core for Linux
       run: |
-        wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        rm -f xray LICENSE geoip.dat geosite.dat README.md
+        wget -q --show-progress -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        rm -f xray LICENSE geoip.dat geosite.dat README.md || true
         unzip -o xray.zip
         chmod +x xray
         sudo mv xray /usr/local/bin/
+        echo "✅ Xray-core installed successfully"
 
     - name: Create necessary directories
       run: |
         mkdir -p data/raw data/working_json data/working_url log
+        mkdir -p reports
 
     - name: Run v2ray config collector
       run: |
@@ -47,35 +51,129 @@ jobs:
       run: |
         echo "Generated config files:"
         ls -la main/v2ray_config_collector/data/unique/protocols/
+        
+        # بررسی وجود فایل‌های ضروری
+        if [ ! -f "main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json" ]; then
+          echo "❌ shadowsocks config file not found!"
+          exit 1
+        fi
+        if [ ! -f "main/v2ray_config_collector/data/unique/protocols/vless_configs.json" ]; then
+          echo "❌ vless config file not found!"
+          exit 1
+        fi
 
     - name: Copy config files to root data directory
       run: |
         # کپی فایل‌های پیکربندی به مسیر اصلی data/raw/
-        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json data/raw/ || echo "shadowsocks config not found"
-        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json data/raw/ || echo "vless config not found"
-        # اگر vmess وجود دارد آن را هم کپی کنید
-        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json data/raw/ 2>/dev/null || echo "vmess config not found (optional)"
+        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json data/raw/ || echo "❌ shadowsocks config copy failed"
+        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json data/raw/ || echo "❌ vless config copy failed"
+        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json data/raw/ 2>/dev/null || echo "⚠️ vmess config not found (optional)"
         
-        echo "Copied config files to data/raw/:"
+        echo "✅ Copied config files to data/raw/:"
         ls -la data/raw/
 
     - name: Run the tests from root directory
       run: |
         # اجرای تستر از مسیر ریشه
         cd main/module
-        python tester.py --shadowsocks ../../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
-        python tester.py --vless ../../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
+        
+        # تست Shadowsocks
+        echo "🧪 Testing Shadowsocks configurations..."
+        python tester.py --shadowsocks ../../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+        
+        # تست VLESS
+        echo "🧪 Testing VLESS configurations..."
+        python tester.py --vless ../../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+        
+        # تست VMess (اگر فایل موجود باشد)
+        if [ -f "../../../data/raw/vmess_configs.json" ]; then
+          echo "🧪 Testing VMess configurations..."
+          python tester.py --vmess ../../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray --workers 500 --timeout 10
+        else
+          echo "⚠️ Skipping VMess tests - config file not found"
+        fi
+
+    - name: Generate test report
+      run: |
+        # تولید گزارش خلاصه تست
+        echo "📊 Generating test report..."
+        
+        # شمارش کانفیگ‌های کارآمد
+        WORKING_SS=$(grep -c '"protocol": "shadowsocks"' data/working_json/working_shadowsocks.txt 2>/dev/null || echo "0")
+        WORKING_VLESS=$(grep -c '"protocol": "vless"' data/working_json/working_vless.txt 2>/dev/null || echo "0")
+        WORKING_VMESS=$(grep -c '"protocol": "vmess"' data/working_json/working_vmess.txt 2>/dev/null || echo "0")
+        
+        # ایجاد گزارش
+        cat > reports/test_summary.md << EOF
+        # Proxy Test Results
+        **Date**: $(date +'%Y-%m-%d %H:%M:%S')
+        
+        ## Working Configurations
+        - Shadowsocks: $WORKING_SS
+        - VLESS: $WORKING_VLESS
+        - VMess: $WORKING_VMESS
+        
+        ## Total Working: $((WORKING_SS + WORKING_VLESS + WORKING_VMESS))
+        
+        ## Test Details
+        Last run: $(date)
+        Workflow: ${{ github.workflow }}
+        Run ID: ${{ github.run_id }}
+        EOF
+        
+        echo "✅ Test report generated"
 
     - name: Configure git for push
       run: |
         git config --global user.email "actions@github.com"
         git config --global user.name "GitHub Actions"
+        git config --global pull.rebase true
+
+    - name: Pull latest changes before push
+      run: |
+        # دریافت آخرین تغییرات قبل از push
+        git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash || echo "Pull failed, continuing..."
 
     - name: Commit and push results
       run: |
-        git add data/raw/* data/working_json/* data/working_url/* log/*
+        # اضافه کردن تمام فایل‌های جدید
+        git add data/raw/* data/working_json/* data/working_url/* log/* reports/*
         git add main/v2ray_config_collector/data/unique/protocols/*
-        git commit -m "Auto-update: Collected and tested configs - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         
-        git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash
-        git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main
+        # بررسی تغییرات
+        if git diff --staged --quiet; then
+          echo "🤷‍♂️ No changes to commit"
+        else
+          git commit -m "Auto-update: Test results - $(date +'%Y-%m-%d %H:%M')"
+          
+          # تلاش برای push با retry
+          for i in {1..3}; do
+            echo "🔄 Attempting push (try $i/3)..."
+            git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main && break
+            sleep 5
+          done
+        fi
+
+    - name: Send notification on success
+      if: success()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Proxy tests completed successfully!\n\nWorking configurations:\n- Shadowsocks: ${{ steps.test-proxies.outputs.working_ss }}\n- VLESS: ${{ steps.test-proxies.outputs.working_vless }}\n- VMess: ${{ steps.test-proxies.outputs.working_vmess }}\n\nView results in the latest commit.'
+          })
+
+    - name: Send notification on failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '❌ Proxy tests failed! Please check the workflow logs for details.'
+          })
