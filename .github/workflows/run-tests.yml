@@ -27,22 +27,15 @@ jobs:
 
     - name: Download Xray-core for Linux
       run: |
-        # دانلود آخرین نسخه Xray-core برای لینوکس
         wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        
-        # حذف فایل‌های قبلی اگر وجود دارند
         rm -f xray LICENSE geoip.dat geosite.dat README.md
-        
-        # extract با overwrite خودکار
         unzip -o xray.zip
-        
-        # قابل اجرا کردن و نصب
         chmod +x xray
         sudo mv xray /usr/local/bin/
 
     - name: Create necessary directories
       run: |
-        mkdir -p main/data/raw main/data/working_json main/data/working_url main/log
+        mkdir -p data/raw data/working_json data/working_url log
 
     - name: Run v2ray config collector
       run: |
@@ -52,45 +45,26 @@ jobs:
 
     - name: Check generated config files
       run: |
-        echo "Generated config files in v2ray_config_collector:"
+        echo "Generated config files:"
         ls -la main/v2ray_config_collector/data/unique/protocols/
-        echo "Content of config files:"
-        find main/v2ray_config_collector/data/unique/protocols/ -name "*.json" -exec echo "{}: " \; -exec head -2 {} \;
 
-    - name: Copy config files to tester directory
+    - name: Copy config files to root data directory
       run: |
-        # کپی فایل‌های پیکربندی به مسیر مورد نیاز tester
-        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json main/data/raw/ || echo "shadowsocks config not found"
-        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json main/data/raw/ || echo "vmess config not found"
-        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json main/data/raw/ || echo "vless config not found"
+        # کپی فایل‌های پیکربندی به مسیر اصلی data/raw/
+        cp main/v2ray_config_collector/data/unique/protocols/shadowsocks_configs.json data/raw/ || echo "shadowsocks config not found"
+        cp main/v2ray_config_collector/data/unique/protocols/vless_configs.json data/raw/ || echo "vless config not found"
+        # اگر vmess وجود دارد آن را هم کپی کنید
+        cp main/v2ray_config_collector/data/unique/protocols/vmess_configs.json data/raw/ 2>/dev/null || echo "vmess config not found (optional)"
         
-        echo "Copied config files to main/data/raw/:"
-        ls -la main/data/raw/
+        echo "Copied config files to data/raw/:"
+        ls -la data/raw/
 
-    - name: Run the tests
+    - name: Run the tests from root directory
       run: |
+        # اجرای تستر از مسیر ریشه
         cd main/module
-        # تست تمام فایل‌های پیکربندی موجود
-        if [ -f "../../data/raw/shadowsocks_configs.json" ]; then
-          echo "Testing Shadowsocks configurations..."
-          python tester.py --shadowsocks ../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
-        else
-          echo "❌ Shadowsocks config file not found"
-        fi
-        
-        if [ -f "../../data/raw/vmess_configs.json" ]; then
-          echo "Testing VMess configurations..."
-          python tester.py --vmess ../../data/raw/vmess_configs.json --xray-path /usr/local/bin/xray
-        else
-          echo "❌ VMess config file not found"
-        fi
-        
-        if [ -f "../../data/raw/vless_configs.json" ]; then
-          echo "Testing VLESS configurations..."
-          python tester.py --vless ../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
-        else
-          echo "❌ VLESS config file not found"
-        fi
+        python tester.py --shadowsocks ../../../data/raw/shadowsocks_configs.json --xray-path /usr/local/bin/xray
+        python tester.py --vless ../../../data/raw/vless_configs.json --xray-path /usr/local/bin/xray
 
     - name: Configure git for push
       run: |
@@ -99,17 +73,9 @@ jobs:
 
     - name: Commit and push results
       run: |
-        # اضافه کردن تمام فایل‌های تولید شده و نتایج
+        git add data/raw/* data/working_json/* data/working_url/* log/*
         git add main/v2ray_config_collector/data/unique/protocols/*
-        git add main/data/raw/*
-        git add main/data/working_json/*
-        git add main/data/working_url/*
-        git add main/log/*
-        
         git commit -m "Auto-update: Collected and tested configs - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
         
-        # ابتدا تغییرات را از remote دریافت کنید
         git pull https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main --rebase --autostash
-        
-        # سپس تغییرات را push کنید
         git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git main
